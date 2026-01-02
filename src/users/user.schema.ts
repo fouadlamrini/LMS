@@ -5,28 +5,28 @@ import { Role } from '../roles/role.enum';
 @Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true })
-  fullName: string;
+  fullName!: string; // ✅ add !
 
   @Prop({ required: true, unique: true, lowercase: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: true })
-  password: string;
+  password!: string;
 
   @Prop({ type: String, enum: Role, required: true })
-  role: Role;
+  role!: Role;
 
   @Prop()
-  studentNumber: number;
+  studentNumber!: number;
 
   @Prop()
-  birthDate: Date;
+  birthDate!: Date;
 
   @Prop()
-  specialization: string;
+  specialization!: string;
 
   @Prop()
-  bio: string;
+  bio!: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
