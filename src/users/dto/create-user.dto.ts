@@ -31,7 +31,7 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsDateString()
-  birthDate?: string;
+  birthDate?: Date;
 
   @IsOptional()
   @IsString()
