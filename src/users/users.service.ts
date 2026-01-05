@@ -13,8 +13,7 @@ export class UsersService {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
-    const user = new this.userModel(data);
-    return user.save();
+    return this.userModel.create(data);
   }
 
   async findByEmail(email: string): Promise<User | null> {
