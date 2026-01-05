@@ -19,4 +19,27 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email });
   }
+
+  // get all users
+  async findAll(): Promise<User[]> {
+    return this.userModel.find();
+  }
+
+  // get user by id
+  async findById(id: string): Promise<User | null> {
+    return this.userModel.findById(id);
+  }
+
+  // update user
+  async update(id: string, data: Partial<CreateUserDto>): Promise<User | null> {
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+    return this.userModel.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  // delete user
+  async remove(id: string): Promise<User | null> {
+    return this.userModel.findByIdAndDelete(id);
+  }
 }
