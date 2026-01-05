@@ -11,6 +11,7 @@ import { CourseModule, CourseModuleSchema } from '../course-modules/schemas/cour
 import { Quiz, QuizSchema } from '../quizzes/schemas/quiz.schema';
 import { Enrollment, EnrollmentSchema } from '../enrollments/schemas/enrollment.schema';
 import { QuizAttempt, QuizAttemptSchema } from '../quizzes/schemas/quiz-attempt.schema';
+import { UsersModule } from '../users/users.module';
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { QuizAttempt, QuizAttemptSchema } from '../quizzes/schemas/quiz-attempt.
             { name: Enrollment.name, schema: EnrollmentSchema },
             { name: QuizAttempt.name, schema: QuizAttemptSchema },
         ]),
+        UsersModule, 
     ],
     providers: [
         UserSeeder,
