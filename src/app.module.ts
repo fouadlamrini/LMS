@@ -9,7 +9,7 @@ import { UsersModule } from './users/users.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGO_URI as string),
-    UsersModule, 
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
