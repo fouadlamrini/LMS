@@ -1,4 +1,14 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
+
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
@@ -15,5 +25,36 @@ export class UsersController {
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get()
+  async getAllUsers() {
+    return this.usersService.findAll();
+  }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    return this.usersService.findById(id);
+  }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Patch(':id')
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: Partial<CreateUserDto>,
+  ) {
+    return this.usersService.update(id, updateUserDto);
+  }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.remove(id);
   }
 }
