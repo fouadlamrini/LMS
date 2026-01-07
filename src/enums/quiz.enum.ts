@@ -7,7 +7,7 @@ export enum QuizStatus {
 
 // Question type
 export enum QuestionType {
-  MULTIPLE_CHOICE = 'multipleChoice',
+  MULTIPLE_CHOICE = 'multipleChoice', // only one correct option
   MULTIPLE_SELECT = 'multipleSelect',
   TRUE_FALSE = 'trueFalse',
   SHORT_ANSWER = 'shortAnswer',
