@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../roles/role.enum';
-import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.schema';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserSeeder {
