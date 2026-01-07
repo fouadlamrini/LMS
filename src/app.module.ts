@@ -9,6 +9,7 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { SeederModule } from './seeders/seeder.module';
 import { AuthModule } from './auth/auth.module';
+import { CoursesModule } from './courses/courses.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AuthModule } from './auth/auth.module';
     EnrollmentsModule,
     QuizzesModule,
     SeederModule,
+    CoursesModule,
     AuthModule,
   ],
   controllers: [AppController],
