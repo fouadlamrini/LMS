@@ -10,7 +10,7 @@ import { TrainerService } from './trainer.service';
 @Roles(Role.TRAINER)
 @Controller('trainer')
 export class TrainerController {
-  constructor(private readonly trainerService: TrainerService) {}
+  constructor(private readonly trainerService: TrainerService) { }
 
   // US-7.1
   @Get('courses/:courseId/learners')
@@ -18,8 +18,7 @@ export class TrainerController {
     @Param('courseId') courseId: string,
     @Req() req: AuthenticatedRequest,
   ) {
-    const trainerId = req.user.id;
-    console.log('trainerId from token in controller:', trainerId);
+    const trainerId = req.user.userId;
 
     return this.trainerService.getEnrolledLearners(
       courseId,
