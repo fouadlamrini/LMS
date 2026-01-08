@@ -26,7 +26,7 @@ export class UsersController {
 
   // Get profile of logged-in user
   @UseGuards(JwtAuthGuard)
-  @Get('me') // khasha tji qbel /:id
+  @Get('me')
   async getMe(@Req() req: RequestWithUser) {
     return await this.usersService.getMe(req.user.sub);
   }
