@@ -69,7 +69,7 @@ export class UsersService {
 
   async updateProfile(userId: string, data: UpdateProfileDto): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
-    if (!user) throw new NotFoundException('User ma-l9it-hach');
+    if (!user) throw new NotFoundException('not found user');
 
     const updated = await this.userModel
       .findByIdAndUpdate(
