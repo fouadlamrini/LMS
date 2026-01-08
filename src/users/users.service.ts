@@ -1,74 +1,94 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import { User } from './user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
+  // ================= ADMIN =================
+
   async create(data: CreateUserDto): Promise<User> {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
-    return this.userModel.create(data);
+    return await this.userModel.create(data);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email });
-  }
-
-  // get all users
   async findAll(): Promise<User[]> {
-    return this.userModel.find();
+    return await this.userModel.find().select('-password').exec();
   }
 
-  // get user by id
-  async findById(id: string): Promise<User | null> {
-    return this.userModel.findById(id);
+  async findById(id: string): Promise<User> {
+    const user = await this.userModel.findById(id).select('-password').exec();
+    if (!user) throw new NotFoundException('User ma-l9it-hach');
+    return user;
   }
 
-  // update user
-  async update(id: string, data: Partial<CreateUserDto>): Promise<User | null> {
+  async updateByAdmin(id: string, data: Partial<CreateUserDto>): Promise<User> {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
-    return this.userModel.findByIdAndUpdate(id, data, { new: true });
+    const updated = await this.userModel
+      .findByIdAndUpdate(id, data, { new: true })
+      .select('-password')
+      .exec();
+    if (!updated) throw new NotFoundException('User ma-l9it-hach');
+    return updated;
   }
 
-  // delete user
-  async remove(id: string): Promise<User | null> {
-    return this.userModel.findByIdAndDelete(id);
+  async remove(id: string): Promise<User> {
+    const deleted = await this.userModel
+      .findByIdAndDelete(id)
+      .select('-password')
+      .exec();
+    if (!deleted) throw new NotFoundException('User ma-l9it-hach');
+    return deleted;
+  }
+
+  // ================= FIND BY EMAIL (for login & seeder) =================
+  async findByEmail(email: string): Promise<User | null> {
+    // <--- include password for bcrypt.compare
+    return await this.userModel.findOne({ email }).exec();
   }
 
   // ================= PROFILE (SELF) =================
 
-  async updateProfile(userId: string, data: UpdateProfileDto): Promise<User> {
-    const user = await this.userModel.findById(userId);
-    if (!user) throw new NotFoundException('user ma-l9it-hach');
-
-    return this.userModel.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          fullName: data.fullName,
-          studentNumber: data.studentNumber,
-          birthDate: data.birthDate,
-          specialization: data.specialization,
-          bio: data.bio,
-        },
-      },
-      { new: true },
-    );
-  }
-  async getMe(userId: string) {
-    const user = await this.userModel.findById(userId).select('-password');
-    if (!user) {
-      throw new NotFoundException('user ma-l9it-hach');
-    }
+  async getMe(userId: string): Promise<User> {
+    const user = await this.userModel
+      .findById(userId)
+      .select('-password')
+      .exec();
+    if (!user) throw new NotFoundException('User ma-l9it-hach');
     return user;
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDto): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User ma-l9it-hach');
+
+    const updated = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            fullName: data.fullName,
+            studentNumber: data.studentNumber,
+            birthDate: data.birthDate,
+            specialization: data.specialization,
+            bio: data.bio,
+          },
+        },
+        { new: true },
+      )
+      .select('-password')
+      .exec();
+
+    if (!updated) throw new NotFoundException('User ma-l9it-hach');
+    return updated;
   }
 }
