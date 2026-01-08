@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateOptionDto } from '../option/create-option.dto';
-import { QuestionType } from '../../../enums/quiz.enum';
+import { QuestionType } from 'src/enums/quiz.enum';
 
 export class CreateQuestionDto {
     @IsDefined()

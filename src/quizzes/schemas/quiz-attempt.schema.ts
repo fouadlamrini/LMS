@@ -35,6 +35,9 @@ export class QuizAttempt {
 
   @Prop()
   submittedAt?: Date;
+  
+  @Prop({ default: false })
+  completed!: boolean; 
 }
 
 export const QuizAttemptSchema = SchemaFactory.createForClass(QuizAttempt);
