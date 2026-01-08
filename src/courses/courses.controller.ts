@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards,Request,} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -9,7 +19,7 @@ import { Role } from '../roles/role.enum';
 
 /**
  * Courses Controller
- * 
+ *
  * Endpoints:
  * - POST   /courses          - Create course (Trainer only)
  * - GET    /courses          - List courses (All authenticated users)
@@ -26,7 +36,7 @@ export class CoursesController {
   @Post()
   @Roles(Role.TRAINER)
   create(@Body() createCourseDto: CreateCourseDto, @Request() req: any) {
-    return this.coursesService.create(createCourseDto, req.user.userId);
+    return this.coursesService.create(createCourseDto, req.user.sub);
   }
 
   @Get()
@@ -43,7 +53,11 @@ export class CoursesController {
 
   @Patch(':id')
   @Roles(Role.TRAINER)
-  update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto,@Request() req: any,) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCourseDto: UpdateCourseDto,
+    @Request() req: any,
+  ) {
     return this.coursesService.update(id, updateCourseDto, req.user.userId);
   }
 
@@ -53,10 +67,13 @@ export class CoursesController {
     return this.coursesService.remove(id, req.user.userId, req.user.role);
   }
 
-
   @Patch(':id/publish')
   @Roles(Role.TRAINER)
-  togglePublish(@Param('id') id: string,@Body('published') published: boolean,@Request() req: any,) {
+  togglePublish(
+    @Param('id') id: string,
+    @Body('published') published: boolean,
+    @Request() req: any,
+  ) {
     return this.coursesService.togglePublish(id, published, req.user.userId);
   }
 }
