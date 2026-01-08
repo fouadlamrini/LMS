@@ -26,8 +26,8 @@ export class TrainerService {
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-    console.log('course.trainerId:', course.trainerId.toString());
-    console.log('trainerId from token:', trainerId);
+    // console.log('course.trainerId:', course.trainerId.toString());
+    // console.log('trainerId from token:', trainerId);
 
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException(
@@ -41,7 +41,6 @@ export class TrainerService {
     courseId: string,
     trainerId: string,
   ) {
-    // 🔐 US-7.3 : vérifier que le cours appartient au trainer
     await this.verifyCourseOwnership(courseId, trainerId);
 
     // récupérer les apprenants inscrits
@@ -50,8 +49,8 @@ export class TrainerService {
       .populate('learnerId', 'name email role');
 
 
-    console.log('enrollments in service:', enrollments);
-    console.log('courseId in service:', courseId);
+    // console.log('enrollments in service:', enrollments);
+    // console.log('courseId in service:', courseId);
 
     return enrollments;
   }
