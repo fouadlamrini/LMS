@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -41,5 +42,26 @@ export class UsersService {
   // delete user
   async remove(id: string): Promise<User | null> {
     return this.userModel.findByIdAndDelete(id);
+  }
+
+  // ================= PROFILE (SELF) =================
+
+  async updateProfile(userId: string, data: UpdateProfileDto): Promise<User> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('user ma-l9it-hach');
+
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          fullName: data.fullName,
+          studentNumber: data.studentNumber,
+          birthDate: data.birthDate,
+          specialization: data.specialization,
+          bio: data.bio,
+        },
+      },
+      { new: true },
+    );
   }
 }
