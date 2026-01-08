@@ -10,7 +10,6 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { SeederModule } from './seeders/seeder.module';
 import { AuthModule } from './auth/auth.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
