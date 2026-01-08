@@ -57,4 +57,12 @@ export class UsersController {
   async deleteUser(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+
+  // ================= PROFILE (SELF) =================
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/profile')
+  async updateMyProfile(@Req() req, @Body() dto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.sub, dto);
+  }
 }
