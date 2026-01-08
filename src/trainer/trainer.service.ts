@@ -6,7 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Course, CourseDocument } from '../courses/schemas/course.schema';
-import { Enrollment, EnrollmentDocument } from 'src/enrollments/schemas/enrollment.schema';
+import { Enrollment, EnrollmentDocument } from '../enrollments/schemas/enrollment.schema';
 
 @Injectable()
 export class TrainerService {
@@ -26,6 +26,8 @@ export class TrainerService {
     if (!course) {
       throw new NotFoundException('Course not found');
     }
+console.log('course.trainerId:', course.trainerId.toString());
+console.log('trainerId from token:', trainerId);
 
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException(

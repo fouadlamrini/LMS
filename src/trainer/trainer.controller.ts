@@ -1,9 +1,9 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import type { AuthenticatedRequest } from 'src/auth/authenticated-request.type';
-import { JwtAuthGuard } from 'src/auth/jwt.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/roles/role.enum';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../roles/role.enum';
 import { TrainerService } from './trainer.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,6 +19,7 @@ export class TrainerController {
     @Req() req: AuthenticatedRequest,
   ) {
     const trainerId = req.user.id;
+    console.log('trainerId from token in controller:', trainerId);
 
     return this.trainerService.getEnrolledLearners(
       courseId,

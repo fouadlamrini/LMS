@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { TrainerController } from './trainer.controller';
 import { TrainerService } from './trainer.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Course, CourseSchema } from 'src/courses/schemas/course.schema';
+import { Course, CourseSchema } from '../courses/schemas/course.schema';
 
-import { Enrollment, EnrollmentSchema } from 'src/enrollments/schemas/enrollment.schema';
+import { Enrollment, EnrollmentSchema } from '../enrollments/schemas/enrollment.schema';
 
 @Module({
   imports: [
