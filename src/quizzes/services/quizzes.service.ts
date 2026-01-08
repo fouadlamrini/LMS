@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Quiz, QuizDocument } from '../schemas/quiz.schema';
 import { CreateQuizDto } from '../dto/quiz/create-quiz.dto';
 import { UpdateQuizDto } from '../dto/quiz/update-quiz.dto';
+import { QuizStatus } from 'src/enums/quiz.enum';
 
 @Injectable()
 export class QuizzesService {
@@ -46,4 +47,21 @@ export class QuizzesService {
     if (!result) throw new NotFoundException(`Quiz with ID ${id} not found`);
     return { deleted: true };
   }
+
+  getDefaultPassingScore(quiz: QuizDocument): number {
+    const totalScore = (quiz.questions ?? []).reduce(
+      (sum, q) => sum + (q.score ?? 0),
+      0,
+    );
+    return Math.ceil(totalScore / 2);
+  }
+
+  async changeQuizStatus(quizId: string, newStatus: QuizStatus) {
+    const quiz = await this.findOne(quizId) as QuizDocument;
+    if (!quiz) throw new NotFoundException('Quiz not found');
+
+    quiz.status = newStatus;
+    return quiz.save();
+  }
+
 }

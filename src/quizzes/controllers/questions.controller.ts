@@ -4,7 +4,8 @@ import {
     Patch,
     Delete,
     Param,
-    Body
+    Body,
+    Get
 } from '@nestjs/common';
 import { QuestionsService } from '../services/questions.service';
 import { CreateQuestionDto } from '../dto/question/create-question.dto';
@@ -41,5 +42,13 @@ export class QuestionsController {
         @Param('questionId') questionId: string,
     ) {
         return this.questionsService.removeQuestion(quizId, questionId);
+    }
+
+    @Get(':questionId')
+    getQuestion(
+        @Param('quizId') quizId: string,
+        @Param('questionId') questionId: string,
+    ) {
+        return this.questionsService.getQuestion(quizId, questionId);
     }
 }
