@@ -26,13 +26,13 @@ export class CoursesController {
   @Post()
   @Roles(Role.TRAINER)
   create(@Body() createCourseDto: CreateCourseDto, @Request() req: any) {
-    return this.coursesService.create(createCourseDto, req.user.userId);
+    return this.coursesService.create(createCourseDto, req.user.id);
   }
 
   @Get()
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findAll(@Request() req: any) {
-    return this.coursesService.findAll(req.user.userId, req.user.role);
+    return this.coursesService.findAll(req.user.id, req.user.role);
   }
 
   @Get(':id')
@@ -44,19 +44,19 @@ export class CoursesController {
   @Patch(':id')
   @Roles(Role.TRAINER)
   update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto,@Request() req: any,) {
-    return this.coursesService.update(id, updateCourseDto, req.user.userId);
+    return this.coursesService.update(id, updateCourseDto, req.user.id);
   }
 
   @Delete(':id')
   @Roles(Role.TRAINER, Role.ADMIN)
   remove(@Param('id') id: string, @Request() req: any) {
-    return this.coursesService.remove(id, req.user.userId, req.user.role);
+    return this.coursesService.remove(id, req.user.id, req.user.role);
   }
 
 
   @Patch(':id/publish')
   @Roles(Role.TRAINER)
   togglePublish(@Param('id') id: string,@Body('published') published: boolean,@Request() req: any,) {
-    return this.coursesService.togglePublish(id, published, req.user.userId);
+    return this.coursesService.togglePublish(id, published, req.user.id);
   }
 }

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Role } from '../roles/role.enum';
-import { QuestionType, QuizStatus } from '../enums/quiz.enum';
-import { Course } from '../courses/schemas/course.schema';
-import { CourseModule } from '../course-modules/schemas/course-module.schema';
-import { Quiz } from '../quizzes/schemas/quiz.schema';
-import { User } from '../users/user.schema';
+import { Role } from 'src/roles/role.enum';
+import { QuestionType, QuizStatus } from 'src/enums/quiz.enum';
+import { Course } from 'src/courses/schemas/course.schema';
+import { CourseModule } from 'src/course-modules/schemas/course-module.schema';
+import { Quiz } from 'src/quizzes/schemas/quiz.schema';
+import { User } from 'src/users/user.schema';
 
 @Injectable()
 export class CourseSeeder {
@@ -92,9 +92,6 @@ export class CourseSeeder {
       ],
     });
 
-    webModule1.quizIds = [webQuiz1._id];
-    await webModule1.save();
-
     const webModule2 = await this.moduleModel.create({
       title: 'JavaScript Fundamentals',
       courseId: webDevCourse._id,
@@ -132,9 +129,6 @@ export class CourseSeeder {
         },
       ],
     });
-
-    webModule2.quizIds = [webQuiz2._id];
-    await webModule2.save();
 
     webDevCourse.modules = [webModule1._id, webModule2._id];
     await webDevCourse.save();
@@ -182,9 +176,6 @@ export class CourseSeeder {
         },
       ],
     });
-
-    dsModule1.quizIds = [dsQuiz1._id];
-    await dsModule1.save();
 
     dataScienceCourse.modules = [dsModule1._id];
     await dataScienceCourse.save();
@@ -246,9 +237,6 @@ export class CourseSeeder {
         },
       ],
     });
-
-    webModule1.quizIds.push(fullTypesQuiz._id);
-    await webModule1.save();
 
     console.log('✅ Courses, modules, and quizzes seeded successfully');
   }

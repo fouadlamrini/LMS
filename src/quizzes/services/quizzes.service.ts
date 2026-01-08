@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Quiz, QuizDocument } from '../schemas/quiz.schema';
 import { CreateQuizDto } from '../dto/quiz/create-quiz.dto';
 import { UpdateQuizDto } from '../dto/quiz/update-quiz.dto';
 import { QuizStatus } from 'src/enums/quiz.enum';
+import { Quiz, QuizDocument } from '../schemas/quiz.schema';
 
 @Injectable()
 export class QuizzesService {

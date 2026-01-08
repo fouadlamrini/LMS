@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { QuestionType, QuizStatus } from '../../enums/quiz.enum';
+import { QuestionType, QuizStatus } from 'src/enums/quiz.enum';
 
 export type QuizDocument = Quiz & Document & {
     questions: Types.DocumentArray<Question & Types.Subdocument>;

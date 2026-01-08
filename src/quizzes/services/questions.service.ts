@@ -4,9 +4,9 @@ import { QuizzesService } from './quizzes.service';
 import { CreateQuestionDto } from '../dto/question/create-question.dto';
 import { UpdateQuestionDto } from '../dto/question/update-question.dto';
 import { Question, QuizDocument } from '../schemas/quiz.schema';
-import { QuestionType } from '../../enums/quiz.enum';
 import { plainToInstance } from 'class-transformer';
 import { QuestionResponseDto } from '../dto/question/question-response.dto';
+import { QuestionType } from 'src/enums/quiz.enum';
 
 @Injectable()
 export class QuestionsService {

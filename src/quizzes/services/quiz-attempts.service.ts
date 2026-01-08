@@ -13,88 +13,97 @@ import {
 } from '../schemas/quiz-attempt.schema';
 import { QuizzesService } from './quizzes.service';
 import { QuizDocument, Question } from '../schemas/quiz.schema';
-import { QuestionType } from '../../enums/quiz.enum';
 import { CreateQuizAttemptDto } from '../dto/attempt/create-quiz-attempt.dto';
 import { AnswerQuestionDto } from '../dto/attempt/answer-question.dto';
+import { Enrollment, EnrollmentDocument } from 'src/enrollments/schemas/enrollment.schema';
+import { QuestionType, QuizStatus } from 'src/enums/quiz.enum';
 
 @Injectable()
 export class QuizAttemptsService {
     constructor(
         @InjectModel(QuizAttempt.name)
         private quizAttemptModel: Model<QuizAttemptDocument>,
+        @InjectModel(Enrollment.name)
+        private enrollmentModel: Model<EnrollmentDocument>,
         private readonly quizzesService: QuizzesService,
     ) { }
 
     /* ================= START ATTEMPT ================= */
-
-    async startAttempt(dto: CreateQuizAttemptDto) {
-        const quiz = (await this.quizzesService.findOne(
-            dto.quizId,
-        )) as QuizDocument;
-
+    async startAttempt(dto: CreateQuizAttemptDto, learnerId: string) {
+        const quiz = await this.quizzesService.findOne(dto.quizId) as QuizDocument;
         if (!quiz) throw new NotFoundException('Quiz not found');
+        if (quiz.status !== QuizStatus.PUBLISHED) throw new BadRequestException('Quiz is not published yet');
 
+        const enrollment = await this.enrollmentModel.findOne({
+            learnerId: new Types.ObjectId(learnerId),
+            'moduleProgress.moduleId': quiz.moduleId,
+        });
+        if (!enrollment) throw new NotFoundException('Enrollment not found');
+
+        // Check if an active (not completed) attempt already exists
+        const existingAttempt = await this.quizAttemptModel.findOne({
+            quizId: quiz._id,
+            _id: { $in: enrollment.moduleProgress.flatMap(mp => mp.quizAttemptIds) },
+            completed: false,
+        });
+
+        if (existingAttempt) return existingAttempt; // return instead of creating new
+
+        // Create new attempt
         const attempt = await this.quizAttemptModel.create({
             quizId: quiz._id,
             answers: [],
             score: 0,
             passed: false,
+            completed: false,
         });
+
+        // Update module progress
+        let moduleProgress = enrollment.moduleProgress.find(mp => mp.moduleId.toString() === quiz.moduleId.toString());
+        if (!moduleProgress) {
+            moduleProgress = {
+                moduleId: quiz.moduleId,
+                completed: false,
+                quizAttemptIds: [],
+            };
+            enrollment.moduleProgress.push(moduleProgress);
+        }
+        moduleProgress.quizAttemptIds.push(attempt._id);
+        await enrollment.save();
 
         return attempt;
     }
 
-    /* ================= ANSWER QUESTION ================= */
 
+    /* ================= ANSWER QUESTION ================= */
     async answerQuestion(attemptId: string, dto: AnswerQuestionDto) {
         const attempt = await this.quizAttemptModel.findById(attemptId);
         if (!attempt) throw new NotFoundException('Attempt not found');
+        if (attempt.submittedAt) throw new BadRequestException('Attempt already submitted');
 
-        if (attempt.submittedAt) {
-            throw new BadRequestException('Attempt already submitted');
-        }
-
-        const quiz = (await this.quizzesService.findOne(
-            attempt.quizId.toString(),
-        )) as QuizDocument;
-
+        const quiz = (await this.quizzesService.findOne(attempt.quizId.toString())) as QuizDocument;
         if (!quiz) throw new NotFoundException('Quiz not found');
 
-        const question = quiz.questions.find(
-            q => q._id.toString() === dto.questionId,
-        );
+        const question = quiz.questions.find(q => q._id.toString() === dto.questionId);
         if (!question) throw new NotFoundException('Question not found in quiz');
 
-        /* ============ BUSINESS VALIDATION ============ */
+        // Business validation
         switch (question.type) {
             case QuestionType.MULTIPLE_CHOICE:
-                if (!dto.selectedOptionIds || dto.selectedOptionIds.length !== 1) {
-                    throw new BadRequestException(
-                        'Multiple choice requires exactly one option',
-                    );
-                }
+                if (!dto.selectedOptionIds || dto.selectedOptionIds.length !== 1)
+                    throw new BadRequestException('Multiple choice requires exactly one option');
                 break;
-
             case QuestionType.MULTIPLE_SELECT:
-                if (!dto.selectedOptionIds || dto.selectedOptionIds.length < 1) {
-                    throw new BadRequestException(
-                        'Multiple select requires at least one option',
-                    );
-                }
+                if (!dto.selectedOptionIds || dto.selectedOptionIds.length < 1)
+                    throw new BadRequestException('Multiple select requires at least one option');
                 break;
-
             case QuestionType.TRUE_FALSE:
-                if (typeof dto.correctAnswerBoolean !== 'boolean') {
-                    throw new BadRequestException(
-                        'True/False requires a boolean value',
-                    );
-                }
+                if (typeof dto.correctAnswerBoolean !== 'boolean')
+                    throw new BadRequestException('True/False requires a boolean value');
                 break;
-
             case QuestionType.SHORT_ANSWER:
-                if (!dto.textAnswer || !dto.textAnswer.trim()) {
+                if (!dto.textAnswer || !dto.textAnswer.trim())
                     throw new BadRequestException('Short answer cannot be empty');
-                }
                 break;
         }
 
@@ -102,105 +111,63 @@ export class QuizAttemptsService {
         if (dto.selectedOptionIds) {
             const validOptionIds = question.options?.map(o => o._id.toString()) ?? [];
             const invalid = dto.selectedOptionIds.some(id => !validOptionIds.includes(id));
-            if (invalid) {
-                throw new BadRequestException('Invalid option selected');
-            }
+            if (invalid) throw new BadRequestException('Invalid option selected');
         }
 
-        /* ============ CHECK IF ALREADY ANSWERED ============ */
-        const existing = attempt.answers.find(
-            a => a.questionId.toString() === dto.questionId,
-        );
+        // Check if already answered
+        const existing = attempt.answers.find(a => a.questionId.toString() === dto.questionId);
+        if (existing) throw new BadRequestException('Question has already been answered');
 
-        if (existing) {
-            throw new BadRequestException('Question has already been answered');
-        }
-
-        /* ============ SAVE NEW ANSWER ============ */
+        // Save new answer
         attempt.answers.push({
             questionId: new Types.ObjectId(dto.questionId),
             selectedOptionIds: dto.selectedOptionIds?.map(id => new Types.ObjectId(id)),
             textAnswer:
                 dto.textAnswer ??
-                (dto.correctAnswerBoolean !== undefined
-                    ? String(dto.correctAnswerBoolean)
-                    : undefined),
+                (dto.correctAnswerBoolean !== undefined ? String(dto.correctAnswerBoolean) : undefined),
         } as Answer);
 
         return attempt.save();
     }
 
     /* ================= SUBMIT ATTEMPT ================= */
-
-    async submitAttempt(attemptId: string) {
+    async submitAttempt(attemptId: string, learnerId: string) {
         const attempt = await this.quizAttemptModel.findById(attemptId);
         if (!attempt) throw new NotFoundException('Attempt not found');
+        if (attempt.submittedAt) throw new BadRequestException('Attempt already submitted');
 
-        if (attempt.submittedAt) {
-            throw new BadRequestException('Attempt already submitted');
-        }
-
-        const quiz = (await this.quizzesService.findOne(
-            attempt.quizId.toString(),
-        )) as QuizDocument;
-
+        const quiz = await this.quizzesService.findOne(attempt.quizId.toString());
         if (!quiz) throw new NotFoundException('Quiz not found');
 
         let score = 0;
 
         for (const question of quiz.questions as Question[]) {
-            const answer = attempt.answers.find(
-                a => a.questionId.toString() === question._id.toString(),
-            );
-
-            if (!answer) continue; // skipped question = 0 points
+            const answer = attempt.answers.find(a => a.questionId.toString() === question._id.toString());
+            if (!answer) continue;
 
             switch (question.type) {
                 case QuestionType.MULTIPLE_CHOICE:
                 case QuestionType.MULTIPLE_SELECT: {
                     if (!answer.selectedOptionIds?.length) break;
+                    const correctOptionIds = question.options!.filter(o => o.correct).map(o => o._id.toString());
+                    const selectedIds = answer.selectedOptionIds.map(id => id.toString());
 
-                    const correctOptionIds = question.options!
-                        .filter(o => o.correct)
-                        .map(o => o._id.toString());
-
-                    const selectedIds = answer.selectedOptionIds.map(id =>
-                        id.toString(),
-                    );
-
-                    if (
-                        question.type === QuestionType.MULTIPLE_CHOICE &&
-                        selectedIds.length === 1 &&
-                        selectedIds[0] === correctOptionIds[0]
-                    ) {
+                    if (question.type === QuestionType.MULTIPLE_CHOICE && selectedIds[0] === correctOptionIds[0])
                         score += question.score;
-                    }
-
-                    if (
-                        question.type === QuestionType.MULTIPLE_SELECT &&
-                        arraysEqual(correctOptionIds, selectedIds)
-                    ) {
+                    if (question.type === QuestionType.MULTIPLE_SELECT && arraysEqual(correctOptionIds, selectedIds))
                         score += question.score;
-                    }
                     break;
                 }
-
                 case QuestionType.SHORT_ANSWER:
                     if (
                         answer.textAnswer &&
                         question.correctAnswerText &&
-                        answer.textAnswer.trim().toLowerCase() ===
-                        question.correctAnswerText.trim().toLowerCase()
-                    ) {
-                        score += question.score;
-                    }
+                        answer.textAnswer.trim().toLowerCase() === question.correctAnswerText.trim().toLowerCase()
+                    ) score += question.score;
                     break;
-
                 case QuestionType.TRUE_FALSE: {
                     const userBool = answer.textAnswer === 'true';
-                    if (userBool === question.correctAnswerBoolean) {
-                        score += question.score;
-                    }
+                    if (userBool === question.correctAnswerBoolean) score += question.score;
                     break;
                 }
             }
@@ -209,23 +176,28 @@ export class QuizAttemptsService {
         attempt.score = score;
         attempt.passed = score >= quiz.passingScore;
         attempt.submittedAt = new Date();
+        attempt.completed = true;
+        await attempt.save();
 
-        return attempt.save();
+        // Update module progress completion
+        const enrollment = await this.enrollmentModel.findOne({ learnerId });
+        if (enrollment) {
+            const moduleProgress = enrollment.moduleProgress.find(mp => mp.moduleId.toString() === quiz.moduleId.toString());
+            if (moduleProgress && attempt.passed) {
+                moduleProgress.completed = true;
+                await enrollment.save();
+            }
+        }
+
+        return attempt;
     }
 }
 
 /* ================= HELPERS ================= */
-
 function arraysEqual(a: string[], b: string[]) {
     if (a.length !== b.length) return false;
-
     const setA = new Set(a);
     const setB = new Set(b);
-
-    if (setA.size !== setB.size) return false;
-
-    for (const v of setA) {
-        if (!setB.has(v)) return false;
-    }
+    for (const v of setA) if (!setB.has(v)) return false;
     return true;
 }
