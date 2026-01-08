@@ -6,8 +6,10 @@ export type QuizDocument = Quiz & Document & {
     questions: Types.DocumentArray<Question & Types.Subdocument>;
 };
 
-@Schema({ _id: false })
+@Schema({ _id: true })
 export class Option {
+    _id!: Types.ObjectId;
+
     @Prop({ required: true })
     text!: string;
 

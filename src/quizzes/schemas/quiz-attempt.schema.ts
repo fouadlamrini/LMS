@@ -33,8 +33,8 @@ export class QuizAttempt {
   @Prop({ default: false })
   passed!: boolean;
 
-  @Prop({ default: Date.now })
-  submittedAt!: Date;
+  @Prop()
+  submittedAt?: Date;
 }
 
 export const QuizAttemptSchema = SchemaFactory.createForClass(QuizAttempt);
