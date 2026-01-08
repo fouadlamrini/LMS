@@ -58,6 +58,13 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 
+  //Get Me
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMe(@Req() req) {
+    return this.usersService.getMe(req.user.sub);
+  }
+
   // ================= PROFILE (SELF) =================
 
   @UseGuards(JwtAuthGuard)
