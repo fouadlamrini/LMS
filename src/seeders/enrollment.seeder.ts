@@ -19,7 +19,7 @@ export class EnrollmentSeeder {
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
-  ) {}
+  ) { }
 
   async seed() {
     const enrollmentCount = await this.enrollmentModel.countDocuments();
@@ -56,26 +56,30 @@ export class EnrollmentSeeder {
           const fullQuiz = await this.quizModel.findById(quiz._id);
 
           if (fullQuiz && fullQuiz.questions.length >= 2) {
+            const q1 = fullQuiz.questions[0];
+            const q2 = fullQuiz.questions[1];
+
             const quizAttempt = await this.quizAttemptModel.create({
               quizId: fullQuiz._id,
               answers: [
                 {
-                  questionId: fullQuiz.questions[0]._id,
-                  selectedOptionIds: [
-                    0, // First option index
-                  ] as any,
+                  questionId: q1._id,
+                  selectedOptionIds: q1.options?.length
+                    ? [q1.options[0]._id]
+                    : [],
                 },
                 {
-                  questionId: fullQuiz.questions[1]._id,
-                  selectedOptionIds: [
-                    0, // First option index
-                  ] as any,
+                  questionId: q2._id,
+                  selectedOptionIds: q2.options?.length
+                    ? [q2.options[0]._id]
+                    : [],
                 },
               ],
               score: 100,
               passed: true,
               submittedAt: new Date(),
             });
+
 
             // Assign the ID to the outer variable
             quizAttemptIds = [quizAttempt._id];
