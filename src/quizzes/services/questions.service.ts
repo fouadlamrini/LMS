@@ -1,9 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuestionDto } from '../dto/question/create-question.dto';
 import { UpdateQuestionDto } from '../dto/question/update-question.dto';
 import { Question, QuizDocument } from '../schemas/quiz.schema';
 import { QuestionType } from '../../enums/quiz.enum';
+import { plainToInstance } from 'class-transformer';
+import { QuestionResponseDto } from '../dto/question/question-response.dto';
 
 @Injectable()
 export class QuestionsService {
@@ -81,6 +84,7 @@ export class QuestionsService {
         this.validateQuestion(dto);
 
         quiz.questions.push(dto as Question);
+        quiz.passingScore = this.quizzesService.getDefaultPassingScore(quiz);
         return quiz.save();
     }
 
@@ -103,10 +107,9 @@ export class QuestionsService {
 
         const { _id, ...safeDto } = dto as any;
         question.set(safeDto);
-
+        quiz.passingScore = this.quizzesService.getDefaultPassingScore(quiz);
         return quiz.save();
     }
-
 
     async removeQuestion(quizId: string, questionId: string) {
         const quiz = await this.quizzesService.findOne(quizId) as QuizDocument;
@@ -120,7 +123,38 @@ export class QuestionsService {
         }
 
         quiz.questions.splice(questionIndex, 1);
+        quiz.passingScore = this.quizzesService.getDefaultPassingScore(quiz);
         return quiz.save();
+    }
+
+    // return one question without mentinng corretc answer
+    async getQuestion(quizId: string, questionId: string) {
+        const quiz = await this.quizzesService.findOne(quizId) as QuizDocument;
+        if (!quiz) throw new NotFoundException('Quiz not found');
+
+        const question = quiz.questions.id(questionId) as Question | null;
+        if (!question) throw new NotFoundException('Question not found');
+
+        const plainQuestion: QuestionResponseDto = {
+            _id: question._id.toString(),
+            text: question.text,
+            type: question.type,
+            score: question.score,
+            options:
+                question.type === QuestionType.MULTIPLE_CHOICE || question.type === QuestionType.MULTIPLE_SELECT
+                    ? question.options?.map(o => ({ _id: o._id.toString(), text: o.text }))
+                    : undefined,
+        };
+
+        if (question.type === QuestionType.MULTIPLE_CHOICE || question.type === QuestionType.MULTIPLE_SELECT) {
+            plainQuestion.options = question.options?.map(o => ({
+                _id: o._id.toString(),
+                text: o.text,
+            }));
+        }
+
+        // Transform to DTO
+        return plainToInstance(QuestionResponseDto, plainQuestion, { excludeExtraneousValues: true });
     }
 }
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../roles/role.enum';
-import { QuestionType } from '../enums/quiz.enum';
+import { QuestionType, QuizStatus } from '../enums/quiz.enum';
 import { Course } from '../courses/schemas/course.schema';
 import { CourseModule } from '../course-modules/schemas/course-module.schema';
 import { Quiz } from '../quizzes/schemas/quiz.schema';
@@ -15,7 +15,7 @@ export class CourseSeeder {
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
     @InjectModel(User.name) private userModel: Model<User>,
-  ) {}
+  ) { }
 
   async seed() {
     const courseCount = await this.courseModel.countDocuments();
@@ -197,6 +197,58 @@ export class CourseSeeder {
       trainerId: trainers[0]._id,
       modules: [],
     });
+
+    const fullTypesQuiz = await this.quizModel.create({
+      moduleId: webModule1._id,
+      passingScore: 70,
+      status: QuizStatus.PUBLISHED,
+      questions: [
+        // 1️⃣ Multiple choice (single correct)
+        {
+          text: 'What does HTML stand for?',
+          type: QuestionType.MULTIPLE_CHOICE,
+          score: 10,
+          options: [
+            { text: 'Hyper Text Markup Language', correct: true },
+            { text: 'High Tech Modern Language', correct: false },
+            { text: 'Home Tool Markup Language', correct: false },
+            { text: 'Hyperlinks and Text Markup Language', correct: false },
+          ],
+        },
+
+        // 2️⃣ Multiple select
+        {
+          text: 'Which of the following are JavaScript frameworks?',
+          type: QuestionType.MULTIPLE_SELECT,
+          score: 15,
+          options: [
+            { text: 'React', correct: true },
+            { text: 'Angular', correct: true },
+            { text: 'Laravel', correct: false },
+            { text: 'Vue', correct: true },
+          ],
+        },
+
+        // 3️⃣ True / False
+        {
+          text: 'CSS is used for styling web pages.',
+          type: QuestionType.TRUE_FALSE,
+          score: 5,
+          correctAnswerBoolean: true,
+        },
+
+        // 4️⃣ Short answer
+        {
+          text: 'Write the keyword used to declare a constant in JavaScript.',
+          type: QuestionType.SHORT_ANSWER,
+          score: 10,
+          correctAnswerText: 'const',
+        },
+      ],
+    });
+
+    webModule1.quizIds.push(fullTypesQuiz._id);
+    await webModule1.save();
 
     console.log('✅ Courses, modules, and quizzes seeded successfully');
   }
