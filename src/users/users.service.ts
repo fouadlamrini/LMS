@@ -64,4 +64,11 @@ export class UsersService {
       { new: true },
     );
   }
+  async getMe(userId: string) {
+    const user = await this.userModel.findById(userId).select('-password');
+    if (!user) {
+      throw new NotFoundException('user ma-l9it-hach');
+    }
+    return user;
+  }
 }
