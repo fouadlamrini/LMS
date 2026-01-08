@@ -31,9 +31,6 @@ export class CourseModule {
 
   @Prop({ type: [ModuleContentSchema], default: [] })
   contents!: ModuleContent[];
-
-  @Prop({ type: [Types.ObjectId], ref: 'Quiz', default: [] })
-  quizIds?: Types.ObjectId[];
 }
 
 export const CourseModuleSchema = SchemaFactory.createForClass(CourseModule);
