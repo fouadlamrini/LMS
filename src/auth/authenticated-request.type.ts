@@ -1,6 +1,11 @@
-import type { Request } from 'express';
-import { AuthUser } from './auth-user.interface';
+import { Request } from 'express';
 
-export type AuthenticatedRequest = Request & {
+export interface AuthUser {
+  userId: string;
+  role: string;
+  email: string;
+}
+
+export interface AuthenticatedRequest extends Request {
   user: AuthUser;
-};
+}
