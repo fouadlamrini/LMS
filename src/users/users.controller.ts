@@ -12,7 +12,7 @@ import {
 import type { RequestWithUser } from '../auth/request-with-user.interface';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import type { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
