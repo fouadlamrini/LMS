@@ -7,10 +7,12 @@ import {
   Body,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
-
+import type { RequestWithUser } from '../auth/request-with-user.interface';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import type { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -20,25 +22,46 @@ import { Role } from '../roles/role.enum';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  // ================= SELF PROFILE ROUTES =================
+
+  // Get profile of logged-in user
+  @UseGuards(JwtAuthGuard)
+  @Get('me') // khasha tji qbel /:id
+  async getMe(@Req() req: RequestWithUser) {
+    return await this.usersService.getMe(req.user.sub);
+  }
+
+  // Update profile of logged-in user
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/profile')
+  async updateMyProfile(
+    @Req() req: RequestWithUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return await this.usersService.updateProfile(req.user.sub, dto);
+  }
+
+  // ================= ADMIN ROUTES =================
+
   @Roles(Role.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return await this.usersService.create(createUserDto);
   }
 
   @Roles(Role.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get()
   async getAllUsers() {
-    return this.usersService.findAll();
+    return await this.usersService.findAll();
   }
 
   @Roles(Role.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Get(':id')
+  @Get(':id') // daba had route katsir f l’a5er
   async getUserById(@Param('id') id: string) {
-    return this.usersService.findById(id);
+    return await this.usersService.findById(id);
   }
 
   @Roles(Role.ADMIN)
@@ -48,28 +71,13 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateUserDto: Partial<CreateUserDto>,
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return await this.usersService.updateByAdmin(id, updateUserDto);
   }
 
   @Roles(Role.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
-    return this.usersService.remove(id);
-  }
-
-  //Get Me
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  getMe(@Req() req) {
-    return this.usersService.getMe(req.user.sub);
-  }
-
-  // ================= PROFILE (SELF) =================
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('me/profile')
-  async updateMyProfile(@Req() req, @Body() dto: UpdateProfileDto) {
-    return this.usersService.updateProfile(req.user.sub, dto);
+    return await this.usersService.remove(id);
   }
 }
