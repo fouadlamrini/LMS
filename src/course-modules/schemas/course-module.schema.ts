@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 export type CourseModuleDocument = CourseModule & Document;
 
 // embedded sub-document
-@Schema({ _id: false })
+@Schema({ _id: true })
 export class ModuleContent {
   @Prop({ enum: ['pdf', 'video'], required: true })
   type!: 'pdf' | 'video';
