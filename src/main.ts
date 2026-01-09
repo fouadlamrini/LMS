@@ -4,6 +4,7 @@ import { UsersService } from './users/users.service';
 import { seedAdmin } from './seeders/admin.seeder';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -13,10 +14,19 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // 🟢 get UsersService
+  // ENABLE DTO VALIDATION
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  // get UsersService
   const usersService = app.get(UsersService);
 
-  // 🟢 seed admin once
+  // seed admin once
   await seedAdmin(usersService);
 
   await app.listen(process.env.PORT ?? 3000);
