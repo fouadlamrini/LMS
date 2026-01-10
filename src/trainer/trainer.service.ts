@@ -50,9 +50,51 @@ export class TrainerService {
 
 
     // console.log('enrollments in service:', enrollments);
+
     // console.log('courseId in service:', courseId);
 
     return enrollments;
   }
+
+  async getLearnerReport(trainerId: string, courseId: string, learnerId: string) {
+  // Ownership check
+  const course = await this.verifyCourseOwnership(courseId, trainerId);
+
+  const enrollment = await this.enrollmentModel
+    .findOne({
+      courseId: new Types.ObjectId(courseId),
+      learnerId: new Types.ObjectId(learnerId),
+    })
+    .populate('learnerId', 'fullName email')
+    .populate('moduleProgress.moduleId')
+    .populate('moduleProgress.quizAttemptIds');
+
+  if (!enrollment) {
+    throw new NotFoundException('Enrollment not found');
+  }
+
+  const modulesReport = enrollment.moduleProgress.map(mp => ({
+    moduleId: mp.moduleId?._id,
+    completed: mp.completed,
+    quizAttempts: mp.quizAttemptIds.map((attempt: any) => ({
+      id: attempt._id,
+      score: attempt.score,
+      passed: attempt.passed,
+      submittedAt: attempt.submittedAt,
+    })),
+  }));
+
+  return {
+    learner: enrollment.learnerId,
+    course: {
+      id: course._id,
+      title: course.title,
+    },
+    modules: modulesReport,
+    overallProgress: enrollment.overallProgress,
+    status: enrollment.status,
+  };
+}
+
 
 }
