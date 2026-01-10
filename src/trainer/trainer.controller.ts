@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseBoolPipe, Query, Req, UseGuards } from '@nestjs/common';
 import type { AuthenticatedRequest } from 'src/auth/authenticated-request.type';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -12,7 +12,7 @@ import { TrainerService } from './trainer.service';
 export class TrainerController {
   constructor(private readonly trainerService: TrainerService) { }
 
-  // US-7.1
+  
   @Get('courses/:courseId/learners')
   async getEnrolledLearners(
     @Param('courseId') courseId: string,
@@ -25,4 +25,21 @@ export class TrainerController {
       trainerId,
     );
   }
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.TRAINER)
+@Get('courses/:courseId/learners/:learnerId/report')
+async getLearnerReport(
+  @Param('courseId') courseId: string,
+  @Param('learnerId') learnerId: string,
+  @Req() req : AuthenticatedRequest,
+) {
+  return this.trainerService.getLearnerReport(
+    req.user.userId,
+    courseId,
+    learnerId
+  );
+}
+
+
+
 }
