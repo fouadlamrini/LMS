@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../roles/role.enum';
+import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
 
 /**
  * Course Modules Controller
@@ -116,6 +117,7 @@ export class CourseModulesController {
 
 
   @Get(':id')
+  @UseGuards(ModuleAccessGuard)
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findOne(@Param('id') id: string, @Request() req: any) {
     return this.courseModulesService.findOne(id, req.user.userId, req.user.role);

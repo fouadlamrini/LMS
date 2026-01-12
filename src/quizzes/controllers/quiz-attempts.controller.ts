@@ -5,6 +5,7 @@ import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/roles/role.enum';
+import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
 
 @Controller('api/courses/:courseId/quizzes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,13 +14,14 @@ export class QuizAttemptsController {
     constructor(private readonly service: QuizAttemptsService) { }
 
     // Start attempt
+    @UseGuards(ModuleAccessGuard)
     @Post(':quizId/attempts')
     startAttempt(
         @Req() req: any,
         @Param('courseId') courseId: string,
         @Param('quizId') quizId: string,
     ) {
-        const learnerId = req.user.id;
+        const learnerId = req.user.userId;
         return this.service.startAttempt(quizId, learnerId, courseId);
     }
 
@@ -39,7 +41,7 @@ export class QuizAttemptsController {
         @Param('courseId') courseId: string,
         @Param('attemptId') attemptId: string,
     ) {
-        const learnerId = req.user.id;
+        const learnerId = req.user.userId;
         return this.service.submitAttempt(attemptId, learnerId, courseId);
     }
 }
