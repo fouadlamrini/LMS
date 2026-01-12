@@ -42,7 +42,7 @@ export class CoursesController {
   @Get()
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findAll(@Request() req: any) {
-    return this.coursesService.findAll(req.user.id, req.user.role);
+    return this.coursesService.findAll(req.user.userId, req.user.role);
   }
 
   @Get(':id')
@@ -64,7 +64,7 @@ export class CoursesController {
   @Delete(':id')
   @Roles(Role.TRAINER, Role.ADMIN)
   remove(@Param('id') id: string, @Request() req: any) {
-    return this.coursesService.remove(id, req.user.id, req.user.role);
+    return this.coursesService.remove(id, req.user.userId, req.user.role);
   }
 
   @Patch(':id/publish')

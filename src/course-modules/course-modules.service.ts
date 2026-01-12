@@ -7,19 +7,21 @@ import { AddContentDto } from './dto/add-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 import { CourseModule } from './schemas/course-module.schema';
 import { CoursesService } from '../courses/courses.service';
+import { Enrollment, EnrollmentDocument } from 'src/enrollments/schemas/enrollment.schema';
 
 
 @Injectable()
 export class CourseModulesService {
   constructor(
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
+    @InjectModel(Enrollment.name) private enrollmentModel: Model<EnrollmentDocument>,
     private coursesService: CoursesService,
-  ) {}
+  ) { }
 
 
   async create(createModuleDto: CreateCourseModuleDto, trainerId: string): Promise<CourseModule> {
     const course = await this.coursesService.findOne(createModuleDto.courseId);
-    
+
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You can only create modules in your own courses');
     }
@@ -47,65 +49,98 @@ export class CourseModulesService {
     return module.save();
   }
 
-  async findByCourse(courseId: string, userId: string, userRole: string): Promise<CourseModule[]> {
-    // Check course exists and apply access control
+  async findByCourse(courseId: string, userId: string, userRole: string) {
     const course = await this.coursesService.findOne(courseId);
-    
-    // Learner: Can only see modules of published courses
+
     if (userRole === 'learner' && !course.published) {
       throw new ForbiddenException('This course is not published yet');
     }
-    
-    // Trainer: Can only see modules of their own courses
+
     if (userRole === 'trainer' && course.trainerId.toString() !== userId) {
       throw new ForbiddenException('You can only view modules of your own courses');
     }
-    
-    // Admin: Can see all modules (no restriction)
-    
-    return this.moduleModel
+
+    const modules = await this.moduleModel
       .find({ courseId: new Types.ObjectId(courseId) })
       .sort({ order: 1 })
-      .exec();
-  }
+      .lean();
 
+    if (userRole === 'learner') {
+      // Load enrollment and module progress
+      const enrollment = await this.enrollmentModel.findOne({
+        courseId: new Types.ObjectId(courseId),
+        learnerId: new Types.ObjectId(userId),
+        status: 'active',
+      }).lean();
+
+      // console.log("lerner id", userId);
+
+      // const allenrolements = await this.enrollmentModel.find();
+      // console.log(allenrolements);
+
+      if (!enrollment) {
+        throw new ForbiddenException('Not enrolled in this course');
+      }
+
+      let previousCompleted = true;
+
+      return modules.map((mod) => {
+        // First module is always accessible
+        const accessible = previousCompleted;
+
+        // Update previousCompleted based on current module progress
+        const progress = enrollment.moduleProgress.find(
+          (mp) => mp.moduleId.toString() === mod._id.toString(),
+        );
+        previousCompleted = progress?.completed ?? false;
+
+        return {
+          ...mod,
+          accessible, // true if learner can access
+          completed: progress?.completed ?? false,
+        };
+      });
+    }
+
+    return modules;
+  }
 
   async findOne(id: string, userId?: string, userRole?: string): Promise<CourseModule> {
     const module = await this.moduleModel.findById(id).exec();
-    
+
     if (!module) {
       throw new NotFoundException(`Module with ID ${id} not found`);
     }
-    
+
     // If access control params provided, check permissions
     if (userId && userRole) {
       const course = await this.coursesService.findOne(module.courseId.toString());
-      
+
       // Learner: Can only see modules of published courses
       if (userRole === 'learner' && !course.published) {
         throw new ForbiddenException('This course is not published yet');
       }
-      
+
       // Trainer: Can only see modules of their own courses
       if (userRole === 'trainer' && course.trainerId.toString() !== userId) {
         throw new ForbiddenException('You can only view modules of your own courses');
       }
-      
+
       // Admin: Can see all modules (no restriction)
     }
-    
+
     return module;
   }
 
 
-  async update(id: string, updateModuleDto: UpdateCourseModuleDto, trainerId: string ): Promise<CourseModule> {
+  async update(id: string, updateModuleDto: UpdateCourseModuleDto, trainerId: string): Promise<CourseModule> {
     const module = await this.findOne(id);
-    
+
     const course = await this.coursesService.findOne(module.courseId.toString());
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You can only update modules in your own courses');
     }
-    
+
     return this.moduleModel.findByIdAndUpdate(
       id,
       updateModuleDto,
@@ -116,20 +151,20 @@ export class CourseModulesService {
 
   async remove(id: string, trainerId: string): Promise<void> {
     const module = await this.findOne(id);
-    
+
     const course = await this.coursesService.findOne(module.courseId.toString());
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You can only delete modules in your own courses');
     }
-    
+
     await this.moduleModel.findByIdAndDelete(id).exec();
   }
 
 
-  async addContent(moduleId: string,addContentDto: AddContentDto,trainerId: string,file?: Express.Multer.File,): Promise<CourseModule> {
+  async addContent(moduleId: string, addContentDto: AddContentDto, trainerId: string, file?: Express.Multer.File,): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
     const course = await this.coursesService.findOne(module.courseId.toString());
-    
+
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You can only add content to your own courses');
     }
@@ -147,7 +182,7 @@ export class CourseModulesService {
       } else {
         throw new BadRequestException('Video content requires either URL or file upload');
       }
-    } 
+    }
     // PDF: Only accept file upload
     else if (addContentDto.type === 'pdf') {
       if (!file) {
@@ -188,7 +223,7 @@ export class CourseModulesService {
   ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
     const course = await this.coursesService.findOne(module.courseId.toString());
-    
+
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You can only update content in your own courses');
     }
@@ -197,7 +232,7 @@ export class CourseModulesService {
     const content = module.contents.find(
       (c: any) => c._id.toString() === contentId
     );
-    
+
     if (!content) {
       throw new NotFoundException(`Content with ID ${contentId} not found in this module`);
     }
@@ -228,7 +263,7 @@ export class CourseModulesService {
   ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
     const course = await this.coursesService.findOne(module.courseId.toString());
-    
+
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You can only delete content in your own courses');
     }
