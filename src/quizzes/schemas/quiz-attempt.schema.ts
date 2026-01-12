@@ -9,7 +9,8 @@ export class Answer {
   @Prop({ type: Types.ObjectId, ref: 'Question', required: true })
   questionId!: Types.ObjectId;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Option', default: [] })
+  // Add default: undefined here
+  @Prop({ type: [Types.ObjectId], ref: 'Option', required: false, default: undefined })
   selectedOptionIds?: Types.ObjectId[];
 
   @Prop()
@@ -35,9 +36,9 @@ export class QuizAttempt {
 
   @Prop()
   submittedAt?: Date;
-  
+
   @Prop({ default: false })
-  completed!: boolean; 
+  completed!: boolean;
 }
 
 export const QuizAttemptSchema = SchemaFactory.createForClass(QuizAttempt);
