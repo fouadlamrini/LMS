@@ -13,7 +13,6 @@ import {
 } from '../schemas/quiz-attempt.schema';
 import { QuizzesService } from './quizzes.service';
 import { QuizDocument, Question } from '../schemas/quiz.schema';
-import { CreateQuizAttemptDto } from '../dto/attempt/create-quiz-attempt.dto';
 import { AnswerQuestionDto } from '../dto/attempt/answer-question.dto';
 import { Enrollment, EnrollmentDocument } from 'src/enrollments/schemas/enrollment.schema';
 import { QuestionType, QuizStatus } from 'src/enums/quiz.enum';
@@ -29,13 +28,14 @@ export class QuizAttemptsService {
     ) { }
 
     /* ================= START ATTEMPT ================= */
-    async startAttempt(dto: CreateQuizAttemptDto, learnerId: string) {
-        const quiz = await this.quizzesService.findOne(dto.quizId) as QuizDocument;
+    async startAttempt(quizId: string, learnerId: string, courseId: string) {
+        const quiz = await this.quizzesService.findOne(quizId) as QuizDocument;
         if (!quiz) throw new NotFoundException('Quiz not found');
         if (quiz.status !== QuizStatus.PUBLISHED) throw new BadRequestException('Quiz is not published yet');
 
         const enrollment = await this.enrollmentModel.findOne({
             learnerId: new Types.ObjectId(learnerId),
+            courseId: new Types.ObjectId(courseId),
             'moduleProgress.moduleId': quiz.moduleId,
         });
         if (!enrollment) throw new NotFoundException('Enrollment not found');
@@ -118,20 +118,26 @@ export class QuizAttemptsService {
         const existing = attempt.answers.find(a => a.questionId.toString() === dto.questionId);
         if (existing) throw new BadRequestException('Question has already been answered');
 
-        // Save new answer
-        attempt.answers.push({
-            questionId: new Types.ObjectId(dto.questionId),
-            selectedOptionIds: dto.selectedOptionIds?.map(id => new Types.ObjectId(id)),
-            textAnswer:
-                dto.textAnswer ??
-                (dto.correctAnswerBoolean !== undefined ? String(dto.correctAnswerBoolean) : undefined),
-        } as Answer);
+        const answerData: any = {
+            questionId: new Types.ObjectId(dto.questionId)
+        };
+
+        if (dto.selectedOptionIds && dto.selectedOptionIds.length > 0) {
+            answerData.selectedOptionIds = dto.selectedOptionIds.map(id => new Types.ObjectId(id));
+        }
+
+        if (dto.textAnswer !== undefined) {
+            answerData.textAnswer = dto.textAnswer;
+        } else if (dto.correctAnswerBoolean !== undefined) {
+            answerData.textAnswer = String(dto.correctAnswerBoolean);
+        }
+        attempt.answers.push(answerData as Answer);
 
         return attempt.save();
     }
 
     /* ================= SUBMIT ATTEMPT ================= */
-    async submitAttempt(attemptId: string, learnerId: string) {
+    async submitAttempt(attemptId: string, learnerId: string, courseId: string) {
         const attempt = await this.quizAttemptModel.findById(attemptId);
         if (!attempt) throw new NotFoundException('Attempt not found');
         if (attempt.submittedAt) throw new BadRequestException('Attempt already submitted');
@@ -180,17 +186,28 @@ export class QuizAttemptsService {
         await attempt.save();
 
         // Update module progress completion
-        const enrollment = await this.enrollmentModel.findOne({ learnerId });
-        if (enrollment) {
+        const enrollment = await this.enrollmentModel.findOne({
+            learnerId: new Types.ObjectId(learnerId),
+            courseId: new Types.ObjectId(courseId),
+        });
+
+        if (enrollment && attempt.passed) {
+            // Mark current module as completed
             const moduleProgress = enrollment.moduleProgress.find(mp => mp.moduleId.toString() === quiz.moduleId.toString());
-            if (moduleProgress && attempt.passed) {
-                moduleProgress.completed = true;
-                await enrollment.save();
-            }
+            if (moduleProgress) moduleProgress.completed = true;
+
+            // Update overall progress %
+            enrollment.overallProgress = Math.round(
+                (enrollment.moduleProgress.filter(mp => mp.completed).length / enrollment.moduleProgress.length) * 100
+            );
+
+            await enrollment.save();
         }
+
 
         return attempt;
     }
+
 }
 
 /* ================= HELPERS ================= */
