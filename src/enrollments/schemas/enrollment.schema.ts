@@ -3,6 +3,19 @@ import { Document, Types } from 'mongoose';
 
 export type EnrollmentDocument = Enrollment & Document;
 
+@Schema({ _id: false })
+export class ResumeState {
+  @Prop({ type: Types.ObjectId })
+  contentId!: Types.ObjectId;
+
+  @Prop()
+  position!: number;
+
+  @Prop()
+  updatedAt!: Date;
+}
+
+
 // Embedded document for module progress
 @Schema({ _id: false })
 export class ModuleProgress {
@@ -14,6 +27,8 @@ export class ModuleProgress {
 
   @Prop({ type: [Types.ObjectId], ref: 'QuizAttempt', default: [] })
   quizAttemptIds!: Types.ObjectId[];
+  @Prop({ type: ResumeState, default: null })
+  resume?: ResumeState;
 }
 
 export const ModuleProgressSchema =

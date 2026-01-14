@@ -111,7 +111,6 @@ export class EnrollmentSeeder {
     await this.enrollmentModel.create({
       courseId: courses[0]._id,
       learnerId: learners[1]._id,
-      moduleProgress: [],
       overallProgress: 0,
       status: 'active',
     });
@@ -120,7 +119,6 @@ export class EnrollmentSeeder {
       await this.enrollmentModel.create({
         courseId: courses[1]._id,
         learnerId: learners[1]._id,
-        moduleProgress: [],
         overallProgress: 0,
         status: 'active',
       });
@@ -134,7 +132,6 @@ export class EnrollmentSeeder {
       await this.enrollmentModel.create({
         courseId: dataScienceCourse._id,
         learnerId: learners[2]._id,
-        moduleProgress: [],
         overallProgress: 0,
         status: 'dropped',
       });

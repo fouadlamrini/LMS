@@ -12,6 +12,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../roles/role.enum';
 import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
+import { SaveResumeDto } from './dto/save-resume.dto';
 
 /**
  * Course Modules Controller
@@ -61,10 +62,10 @@ export class CourseModulesController {
           'video/mp4',
           'video/webm',
           'video/avi',
-          'video/quicktime', 
-          'video/x-msvideo', 
+          'video/quicktime',
+          'video/x-msvideo',
         ];
-        
+
         if (!allowedMimeTypes.includes(file.mimetype)) {
           return callback(
             new BadRequestException('Only PDF and Video files (mp4, webm, avi, mov) are allowed'),
@@ -126,7 +127,7 @@ export class CourseModulesController {
 
   @Patch(':id')
   @Roles(Role.TRAINER)
-  update(@Param('id') id: string,@Body() updateModuleDto: UpdateCourseModuleDto,@Request() req: any,) {
+  update(@Param('id') id: string, @Body() updateModuleDto: UpdateCourseModuleDto, @Request() req: any,) {
     return this.courseModulesService.update(id, updateModuleDto, req.user.userId);
   }
 
@@ -135,5 +136,31 @@ export class CourseModulesController {
   @Roles(Role.TRAINER)
   remove(@Param('id') id: string, @Request() req: any) {
     return this.courseModulesService.remove(id, req.user.userId);
+  }
+
+  @Get('courses/:courseId/resume')
+  @Roles(Role.LEARNER)
+  getCourseResume(
+    @Param('courseId') courseId: string,
+    @Request() req: any,
+  ) {
+    return this.courseModulesService.getCourseResume(
+      courseId,
+      req.user.userId,
+    );
+  }
+
+  @Patch('courses/:courseId/resume')
+  @Roles(Role.LEARNER)
+  saveCourseResume(
+    @Param('courseId') courseId: string,
+    @Body() dto: SaveResumeDto,
+    @Request() req: any,
+  ) {
+    return this.courseModulesService.saveCourseResume(
+      courseId,
+      req.user.userId,
+      dto,
+    );
   }
 }

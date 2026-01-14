@@ -14,6 +14,7 @@ export class ModuleContent {
 
   @Prop()
   title?: string;
+  _id!: Types.ObjectId;
 }
 
 export const ModuleContentSchema = SchemaFactory.createForClass(ModuleContent);

@@ -7,8 +7,13 @@ import { AddContentDto } from './dto/add-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 import { CourseModule } from './schemas/course-module.schema';
 import { CoursesService } from '../courses/courses.service';
-import { Enrollment, EnrollmentDocument } from 'src/enrollments/schemas/enrollment.schema';
+import { Enrollment, EnrollmentDocument, ModuleProgress } from 'src/enrollments/schemas/enrollment.schema';
+import { SaveResumeDto } from './dto/save-resume.dto';
 
+
+type ModuleProgressWithResume = ModuleProgress & {
+  resume: NonNullable<ModuleProgress['resume']>;
+};
 
 @Injectable()
 export class CourseModulesService {
@@ -72,11 +77,6 @@ export class CourseModulesService {
         learnerId: new Types.ObjectId(userId),
         status: 'active',
       }).lean();
-
-      // console.log("lerner id", userId);
-
-      // const allenrolements = await this.enrollmentModel.find();
-      // console.log(allenrolements);
 
       if (!enrollment) {
         throw new ForbiddenException('Not enrolled in this course');
@@ -284,6 +284,130 @@ export class CourseModulesService {
     }
 
     return updatedModule;
+  }
+
+  async getCourseResume(courseId: string, learnerId: string) {
+
+    // check if course exits or enroled in 
+    const course = await this.coursesService.findOne(courseId);
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    // Get enrollment
+    const enrollment = await this.enrollmentModel.findOne({
+      courseId: new Types.ObjectId(courseId),
+      learnerId: new Types.ObjectId(learnerId),
+      status: 'active',
+    }).lean();
+
+    if (!enrollment)
+      throw new NotFoundException('No active enrollment found for this course');
+
+    // Find last module with resume
+    const last = enrollment.moduleProgress
+      .filter(
+        (mp): mp is ModuleProgressWithResume =>
+          mp.resume !== undefined && mp.resume !== null
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.resume.updatedAt).getTime() -
+          new Date(a.resume.updatedAt).getTime(),
+      )[0];
+
+    if (last) {
+      // Return last watched content
+      return {
+        moduleId: last.moduleId,
+        contentId: last.resume.contentId,
+        position: last.resume.position,
+      };
+    }
+
+    // Fallback: first module & first content
+    const firstModule = await this.moduleModel
+      .findOne({ courseId: new Types.ObjectId(courseId) })
+      .sort({ order: 1 })
+      .lean();
+
+    if (!firstModule || !firstModule.contents || firstModule.contents.length === 0) {
+      return null; // no content in course
+    }
+
+    return {
+      moduleId: firstModule._id,
+      contentId: firstModule.contents[0]._id,
+      position: 0,
+    };
+  }
+
+  async saveCourseResume(
+    courseId: string,
+    learnerId: string,
+    dto: SaveResumeDto,
+  ) {
+
+    // check if course exits or enroled in 
+    const course = await this.coursesService.findOne(courseId);
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    // Get enrollment
+    const enrollment = await this.enrollmentModel.findOne({
+      courseId: new Types.ObjectId(courseId),
+      learnerId: new Types.ObjectId(learnerId),
+      status: 'active',
+    }).lean();
+
+    if (!enrollment)
+      throw new NotFoundException('No active enrollment found for this course');
+
+    // check module exists in course
+    const module = await this.moduleModel.findOne({
+      _id: dto.moduleId,
+      courseId: new Types.ObjectId(courseId),
+    }).lean();
+    if (!module) {
+      throw new NotFoundException(`Module with ID ${dto.moduleId} not found in this course`);
+    }
+
+    // check if content exists in module
+    const content = module.contents.find(
+      (c: any) => c._id.toString() === dto.contentId,
+    );
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${dto.contentId} not found in this module`);
+    }
+
+    // Update or add resume in moduleProgress
+    const updated = await this.enrollmentModel.findOneAndUpdate(
+      {
+        courseId: new Types.ObjectId(courseId),
+        learnerId: new Types.ObjectId(learnerId),
+        status: 'active',
+        'moduleProgress.moduleId': new Types.ObjectId(dto.moduleId),
+      },
+      {
+        $set: {
+          'moduleProgress.$.resume': {
+            contentId: new Types.ObjectId(dto.contentId),
+            position: dto.position,
+            updatedAt: new Date(),
+          },
+        },
+      },
+      { new: true },
+    ).exec();
+
+    if (!updated) {
+      throw new NotFoundException(
+        'Module progress not found for this enrollment',
+      );
+    }
+
+    return updated;
   }
 }
 
