@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    ForbiddenException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { QuizDocument, Question } from '../schemas/quiz.schema';
 import { AnswerQuestionDto } from '../dto/attempt/answer-question.dto';
 import { Enrollment, EnrollmentDocument } from 'src/enrollments/schemas/enrollment.schema';
 import { QuestionType, QuizStatus } from 'src/enums/quiz.enum';
+import { CourseModule, CourseModuleDocument } from 'src/course-modules/schemas/course-module.schema';
 
 @Injectable()
 export class QuizAttemptsService {
@@ -24,19 +26,23 @@ export class QuizAttemptsService {
         private quizAttemptModel: Model<QuizAttemptDocument>,
         @InjectModel(Enrollment.name)
         private enrollmentModel: Model<EnrollmentDocument>,
+        @InjectModel(CourseModule.name)
+        private courseModuleModel: Model<CourseModuleDocument>,
         private readonly quizzesService: QuizzesService,
     ) { }
 
     /* ================= START ATTEMPT ================= */
-    async startAttempt(quizId: string, learnerId: string, courseId: string) {
+    async startAttempt(quizId: string, learnerId: string) {
         const quiz = await this.quizzesService.findOne(quizId) as QuizDocument;
         if (!quiz) throw new NotFoundException('Quiz not found');
         if (quiz.status !== QuizStatus.PUBLISHED) throw new BadRequestException('Quiz is not published yet');
 
+        const courseId = await this.getCourseIdFromQuiz(quiz);
+
+        // Check enrollment
         const enrollment = await this.enrollmentModel.findOne({
             learnerId: new Types.ObjectId(learnerId),
             courseId: new Types.ObjectId(courseId),
-            'moduleProgress.moduleId': quiz.moduleId,
         });
         if (!enrollment) throw new NotFoundException('Enrollment not found');
 
@@ -76,13 +82,24 @@ export class QuizAttemptsService {
 
 
     /* ================= ANSWER QUESTION ================= */
-    async answerQuestion(attemptId: string, dto: AnswerQuestionDto) {
+    async answerQuestion(attemptId: string, dto: AnswerQuestionDto, learnerId: string) {
         const attempt = await this.quizAttemptModel.findById(attemptId);
         if (!attempt) throw new NotFoundException('Attempt not found');
         if (attempt.submittedAt) throw new BadRequestException('Attempt already submitted');
 
         const quiz = (await this.quizzesService.findOne(attempt.quizId.toString())) as QuizDocument;
         if (!quiz) throw new NotFoundException('Quiz not found');
+
+        const courseId = await this.getCourseIdFromQuiz(quiz);
+
+        const enrollment = await this.enrollmentModel.findOne({
+            learnerId: new Types.ObjectId(learnerId),
+            courseId: new Types.ObjectId(courseId),
+            'moduleProgress.quizAttemptIds': attempt._id,
+        });
+
+        if (!enrollment)
+            throw new ForbiddenException('You do not own this attempt');
 
         const question = quiz.questions.find(q => q._id.toString() === dto.questionId);
         if (!question) throw new NotFoundException('Question not found in quiz');
@@ -137,13 +154,23 @@ export class QuizAttemptsService {
     }
 
     /* ================= SUBMIT ATTEMPT ================= */
-    async submitAttempt(attemptId: string, learnerId: string, courseId: string) {
+    async submitAttempt(attemptId: string, learnerId: string) {
         const attempt = await this.quizAttemptModel.findById(attemptId);
         if (!attempt) throw new NotFoundException('Attempt not found');
         if (attempt.submittedAt) throw new BadRequestException('Attempt already submitted');
 
         const quiz = await this.quizzesService.findOne(attempt.quizId.toString());
         if (!quiz) throw new NotFoundException('Quiz not found');
+        const courseId = await this.getCourseIdFromQuiz(quiz);
+
+        const enrollment = await this.enrollmentModel.findOne({
+            learnerId: new Types.ObjectId(learnerId),
+            courseId: new Types.ObjectId(courseId),
+            'moduleProgress.quizAttemptIds': attempt._id,
+        });
+
+        if (!enrollment)
+            throw new ForbiddenException('You do not own this attempt');
 
         let score = 0;
 
@@ -186,11 +213,6 @@ export class QuizAttemptsService {
         await attempt.save();
 
         // Update module progress completion
-        const enrollment = await this.enrollmentModel.findOne({
-            learnerId: new Types.ObjectId(learnerId),
-            courseId: new Types.ObjectId(courseId),
-        });
-
         if (enrollment && attempt.passed) {
             // Mark current module as completed
             const moduleProgress = enrollment.moduleProgress.find(mp => mp.moduleId.toString() === quiz.moduleId.toString());
@@ -206,6 +228,18 @@ export class QuizAttemptsService {
 
 
         return attempt;
+    }
+
+    private async getCourseIdFromQuiz(quiz: QuizDocument) {
+        const module = await this.courseModuleModel
+            .findById(quiz.moduleId)
+            .select('courseId')
+            .lean();
+
+        if (!module?.courseId)
+            throw new NotFoundException('Course not found');
+
+        return module.courseId;
     }
 
 }
