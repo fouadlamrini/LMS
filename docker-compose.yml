@@ -1,0 +1,49 @@
+name: lms
+services:
+  api:
+    container_name: lms_api
+    build: ./apps/api
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./apps/api/.env
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      - mongo
+    networks:
+      - lms_network
+
+  web:
+    container_name: lms_web
+    build: ./apps/web
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./apps/web/.env
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - lms_network
+
+  mongo:
+    container_name: lms_mongo
+    image: mongo:7
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - lms_network
+
+volumes:
+  mongo_data:
+
+networks:
+  lms_network:
+    driver: bridge
