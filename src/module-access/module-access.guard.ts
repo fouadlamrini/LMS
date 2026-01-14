@@ -3,6 +3,8 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { CourseModule, CourseModuleDocument } from "src/course-modules/schemas/course-module.schema";
 import { Enrollment, EnrollmentDocument } from "src/enrollments/schemas/enrollment.schema";
+import { QuizzesModule } from "src/quizzes/quizzes.module";
+import { QuizDocument } from "src/quizzes/schemas/quiz.schema";
 
 @Injectable()
 export class ModuleAccessGuard implements CanActivate {
@@ -12,25 +14,16 @@ export class ModuleAccessGuard implements CanActivate {
 
     @InjectModel(CourseModule.name)
     private readonly moduleModel: Model<CourseModuleDocument>,
+
+    @InjectModel('Quiz') // <-- fixed here
+    private readonly quizModel: Model<QuizDocument>,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const learnerId = request.user.userId;
 
-    // Determine moduleId: either from params or from quizId
-    let moduleId = request.params.moduleId || request.params.id;
-
-    if (!moduleId && request.params.quizId) {
-      // If quizId is present, get moduleId from Quiz collection
-      const quiz = await this.moduleModel.db.collection('quizzes').findOne({
-        _id: new Types.ObjectId(request.params.quizId),
-      });
-      if (!quiz) throw new NotFoundException('Quiz not found');
-      moduleId = quiz.moduleId.toString();
-    }
-
-    if (!moduleId) throw new ForbiddenException('Module ID not found');
+    const moduleId = await this.resolveModuleId(request);
 
     // Load module
     const module = await this.moduleModel.findById(moduleId).lean();
@@ -60,11 +53,28 @@ export class ModuleAccessGuard implements CanActivate {
 
     const previousProgress = enrollment.moduleProgress.find(
       mp => mp.moduleId.toString() === previousModule._id.toString(),
-    );    
+    );
 
     if (!previousProgress || !previousProgress.completed)
       throw new ForbiddenException('Previous module must be completed first');
 
     return true;
+  }
+
+  private async resolveModuleId(request: any): Promise<Types.ObjectId> {
+    if (request.params.moduleId)
+      return new Types.ObjectId(request.params.moduleId);
+
+    if (request.params.quizId) {
+      const quiz = await this.quizModel
+        .findById(request.params.quizId)
+        .select('moduleId')
+        .lean();
+
+      if (!quiz) throw new NotFoundException('Quiz not found');
+      return quiz.moduleId;
+    }
+
+    throw new ForbiddenException('Module ID not found');
   }
 }

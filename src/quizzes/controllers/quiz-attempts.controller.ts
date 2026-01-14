@@ -18,30 +18,30 @@ export class QuizAttemptsController {
     @Post(':quizId/attempts')
     startAttempt(
         @Req() req: any,
-        @Param('courseId') courseId: string,
         @Param('quizId') quizId: string,
     ) {
         const learnerId = req.user.userId;
-        return this.service.startAttempt(quizId, learnerId, courseId);
+        return this.service.startAttempt(quizId, learnerId);
     }
 
     // Answer question
     @Post('/attempts/:attemptId/answer')
     answerQuestion(
+        @Req() req: any,
         @Param('attemptId') attemptId: string,
         @Body() dto: AnswerQuestionDto,
     ) {
-        return this.service.answerQuestion(attemptId, dto);
+        const learnerId = req.user.userId;
+        return this.service.answerQuestion(attemptId, dto, learnerId);
     }
 
     // Submit attempt
     @Post('/attempts/:attemptId/submit')
     submitAttempt(
         @Req() req: any,
-        @Param('courseId') courseId: string,
         @Param('attemptId') attemptId: string,
     ) {
         const learnerId = req.user.userId;
-        return this.service.submitAttempt(attemptId, learnerId, courseId);
+        return this.service.submitAttempt(attemptId, learnerId);
     }
 }
