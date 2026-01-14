@@ -6,6 +6,7 @@ import { CourseModule, CourseModuleSchema } from './schemas/course-module.schema
 import { CoursesModule } from '../courses/courses.module';
 import { Enrollment, EnrollmentSchema } from 'src/enrollments/schemas/enrollment.schema';
 import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
+import { Quiz, QuizSchema } from 'src/quizzes/schemas/quiz.schema';
 
 
 @Module({
@@ -13,6 +14,7 @@ import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
     MongooseModule.forFeature([
       { name: CourseModule.name, schema: CourseModuleSchema },
       { name: Enrollment.name, schema: EnrollmentSchema },
+      { name: Quiz.name, schema: QuizSchema },
     ]),
     CoursesModule,
   ],
