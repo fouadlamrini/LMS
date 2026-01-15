@@ -34,8 +34,8 @@ export default function LearnerSidebar({ user }: { user: User }) {
             {/* User Info */}
             <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-primary font-semibold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+                        <span className="text-secondary font-semibold text-sm">
                             {user.name.charAt(0).toUpperCase()}
                         </span>
                     </div>
@@ -45,6 +45,7 @@ export default function LearnerSidebar({ user }: { user: User }) {
                     </div>
                 </div>
             </div>
+
 
             {/* Navigation */}
             <nav className="flex-1 p-4">
@@ -58,8 +59,8 @@ export default function LearnerSidebar({ user }: { user: User }) {
                                 <Link
                                     href={link.href}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'text-muted hover:bg-background hover:text-foreground'
+                                        ? 'bg-primary text-white shadow-sm'
+                                        : 'text-muted hover:bg-background hover:text-foreground'
                                         }`}
                                 >
                                     <Icon size={20} />
