@@ -29,18 +29,18 @@ export default function AdminSidebar({ user }: { user: User }) {
                 <div className="text-xl font-bold text-foreground">
                     LMS<span className="text-secondary">Platform</span>
                 </div>
-                <p className="text-xs text-error mt-1 font-semibold">Admin Panel</p>
+                <p className="text-xs text-secondary mt-1 font-semibold">Admin Panel</p>
             </div>
 
             {/* User Info */}
             <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-error/20 flex items-center justify-center">
-                        <Shield size={20} className="text-error" />
+                        <Shield size={20} className="text-secondary" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
-                        <p className="text-xs text-error truncate">Administrator</p>
+                        <p className="text-xs text-secondary truncate">Administrator</p>
                     </div>
                 </div>
             </div>
@@ -77,7 +77,7 @@ export default function AdminSidebar({ user }: { user: User }) {
                         // Handle logout
                         console.log('Logout clicked');
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error/10 transition-all w-full"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-error/10 transition-all w-full"
                 >
                     <LogOut size={20} />
                     <span className="font-medium text-sm">Logout</span>
