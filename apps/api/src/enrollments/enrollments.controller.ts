@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { EnrollmentsService } from './enrollments.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
@@ -9,7 +19,7 @@ import { Role } from '../roles/role.enum';
 
 /**
  * Enrollments Controller
- * 
+ *
  * Endpoints:
  * - POST   /enrollments                  - Enroll in course (Learner only)
  * - GET    /enrollments/my-enrollments   - Get my enrolled courses (Learner)
@@ -25,8 +35,14 @@ export class EnrollmentsController {
 
   @Post()
   @Roles(Role.LEARNER)
-  create(@Body() createEnrollmentDto: CreateEnrollmentDto, @Request() req: any) {
-    return this.enrollmentsService.enroll(createEnrollmentDto.courseId, req.user.userId);
+  create(
+    @Body() createEnrollmentDto: CreateEnrollmentDto,
+    @Request() req: any,
+  ) {
+    return this.enrollmentsService.enroll(
+      createEnrollmentDto.courseId,
+      req.user.userId,
+    );
   }
 
   @Get('my-enrollments')
@@ -37,7 +53,10 @@ export class EnrollmentsController {
 
   @Get('course/:courseId')
   @Roles(Role.TRAINER, Role.ADMIN)
-  getEnrollmentsByCourse(@Param('courseId') courseId: string, @Request() req: any) {
+  getEnrollmentsByCourse(
+    @Param('courseId') courseId: string,
+    @Request() req: any,
+  ) {
     return this.enrollmentsService.findByCourse(courseId, req.user.userId);
   }
 
@@ -61,7 +80,10 @@ export class EnrollmentsController {
 
   @Patch(':id')
   @Roles(Role.ADMIN)
-  update(@Param('id') id: string, @Body() updateEnrollmentDto: UpdateEnrollmentDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateEnrollmentDto: UpdateEnrollmentDto,
+  ) {
     return this.enrollmentsService.update(id, updateEnrollmentDto);
   }
 

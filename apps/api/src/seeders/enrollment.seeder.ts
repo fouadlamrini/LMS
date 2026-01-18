@@ -19,7 +19,7 @@ export class EnrollmentSeeder {
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
-  ) { }
+  ) {}
 
   async seed() {
     const enrollmentCount = await this.enrollmentModel.countDocuments();
@@ -79,7 +79,6 @@ export class EnrollmentSeeder {
               passed: true,
               submittedAt: new Date(),
             });
-
 
             // Assign the ID to the outer variable
             quizAttemptIds = [quizAttempt._id];

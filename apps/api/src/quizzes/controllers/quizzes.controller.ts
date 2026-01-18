@@ -15,7 +15,7 @@ import { UpdateQuizStatusDto } from '../dto/quiz/update-quiz-status.dto';
 
 @Controller('quizzes')
 export class QuizzesController {
-  constructor(private readonly quizzesService: QuizzesService) { }
+  constructor(private readonly quizzesService: QuizzesService) {}
 
   @Post()
   create(@Body() createQuizDto: CreateQuizDto) {
@@ -60,5 +60,4 @@ export class QuizzesController {
   ) {
     return this.quizzesService.changeQuizStatus(quizId, dto.status);
   }
-
 }

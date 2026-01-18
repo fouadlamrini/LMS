@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateQuizDto } from '../dto/quiz/create-quiz.dto';
@@ -8,10 +12,9 @@ import { Quiz, QuizDocument } from '../schemas/quiz.schema';
 
 @Injectable()
 export class QuizzesService {
-  constructor(@InjectModel(Quiz.name) private quizModel: Model<QuizDocument>) { }
+  constructor(@InjectModel(Quiz.name) private quizModel: Model<QuizDocument>) {}
 
   async create(createQuizDto: CreateQuizDto) {
-
     const createdQuiz = new this.quizModel({ ...createQuizDto, questions: [] });
     return createdQuiz.save();
   }
@@ -57,11 +60,10 @@ export class QuizzesService {
   }
 
   async changeQuizStatus(quizId: string, newStatus: QuizStatus) {
-    const quiz = await this.findOne(quizId) as QuizDocument;
+    const quiz = await this.findOne(quizId);
     if (!quiz) throw new NotFoundException('Quiz not found');
 
     quiz.status = newStatus;
     return quiz.save();
   }
-
 }

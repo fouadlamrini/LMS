@@ -15,7 +15,7 @@ export class CourseSeeder {
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
     @InjectModel(User.name) private userModel: Model<User>,
-  ) { }
+  ) {}
 
   async seed() {
     const courseCount = await this.courseModel.countDocuments();

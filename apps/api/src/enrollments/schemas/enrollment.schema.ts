@@ -15,7 +15,6 @@ export class ResumeState {
   updatedAt!: Date;
 }
 
-
 // Embedded document for module progress
 @Schema({ _id: false })
 export class ModuleProgress {
