@@ -2,12 +2,17 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CourseModulesService } from './course-modules.service';
 import { CourseModulesController } from './course-modules.controller';
-import { CourseModule, CourseModuleSchema } from './schemas/course-module.schema';
+import {
+  CourseModule,
+  CourseModuleSchema,
+} from './schemas/course-module.schema';
 import { CoursesModule } from '../courses/courses.module';
-import { Enrollment, EnrollmentSchema } from 'src/enrollments/schemas/enrollment.schema';
+import {
+  Enrollment,
+  EnrollmentSchema,
+} from 'src/enrollments/schemas/enrollment.schema';
 import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
 import { Quiz, QuizSchema } from 'src/quizzes/schemas/quiz.schema';
-
 
 @Module({
   imports: [
@@ -22,4 +27,4 @@ import { Quiz, QuizSchema } from 'src/quizzes/schemas/quiz.schema';
   providers: [CourseModulesService, ModuleAccessGuard],
   exports: [CourseModulesService],
 })
-export class CourseModulesModule { }
+export class CourseModulesModule {}

@@ -11,12 +11,11 @@ import {
 import { CreateQuizDto } from '../dto/quiz/create-quiz.dto';
 import { UpdateQuizDto } from '../dto/quiz/update-quiz.dto';
 import { QuizzesService } from '../services/quizzes.service';
-import { QuizStatus } from 'src/enums/quiz.enum';
 import { UpdateQuizStatusDto } from '../dto/quiz/update-quiz-status.dto';
 
-@Controller('api/quizzes')
+@Controller('quizzes')
 export class QuizzesController {
-  constructor(private readonly quizzesService: QuizzesService) { }
+  constructor(private readonly quizzesService: QuizzesService) {}
 
   @Post()
   create(@Body() createQuizDto: CreateQuizDto) {
@@ -61,5 +60,4 @@ export class QuizzesController {
   ) {
     return this.quizzesService.changeQuizStatus(quizId, dto.status);
   }
-
 }

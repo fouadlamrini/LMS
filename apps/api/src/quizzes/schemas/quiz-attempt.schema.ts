@@ -10,7 +10,12 @@ export class Answer {
   questionId!: Types.ObjectId;
 
   // Add default: undefined here
-  @Prop({ type: [Types.ObjectId], ref: 'Option', required: false, default: undefined })
+  @Prop({
+    type: [Types.ObjectId],
+    ref: 'Option',
+    required: false,
+    default: undefined,
+  })
   selectedOptionIds?: Types.ObjectId[];
 
   @Prop()

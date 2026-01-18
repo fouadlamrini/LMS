@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateCourseModuleDto } from './dto/create-course-module.dto';
@@ -7,9 +12,12 @@ import { AddContentDto } from './dto/add-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 import { CourseModule } from './schemas/course-module.schema';
 import { CoursesService } from '../courses/courses.service';
-import { Enrollment, EnrollmentDocument, ModuleProgress } from 'src/enrollments/schemas/enrollment.schema';
+import {
+  Enrollment,
+  EnrollmentDocument,
+  ModuleProgress,
+} from 'src/enrollments/schemas/enrollment.schema';
 import { SaveResumeDto } from './dto/save-resume.dto';
-
 
 type ModuleProgressWithResume = ModuleProgress & {
   resume: NonNullable<ModuleProgress['resume']>;
@@ -19,16 +27,21 @@ type ModuleProgressWithResume = ModuleProgress & {
 export class CourseModulesService {
   constructor(
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
-    @InjectModel(Enrollment.name) private enrollmentModel: Model<EnrollmentDocument>,
+    @InjectModel(Enrollment.name)
+    private enrollmentModel: Model<EnrollmentDocument>,
     private coursesService: CoursesService,
-  ) { }
+  ) {}
 
-
-  async create(createModuleDto: CreateCourseModuleDto, trainerId: string): Promise<CourseModule> {
+  async create(
+    createModuleDto: CreateCourseModuleDto,
+    trainerId: string,
+  ): Promise<CourseModule> {
     const course = await this.coursesService.findOne(createModuleDto.courseId);
 
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only create modules in your own courses');
+      throw new ForbiddenException(
+        'You can only create modules in your own courses',
+      );
     }
 
     const existingModules = await this.moduleModel
@@ -39,7 +52,7 @@ export class CourseModulesService {
     const expectedOrder = existingModules.length + 1;
     if (createModuleDto.order !== expectedOrder) {
       throw new BadRequestException(
-        `Order must be ${expectedOrder}. Cannot skip module numbers.`
+        `Order must be ${expectedOrder}. Cannot skip module numbers.`,
       );
     }
 
@@ -62,7 +75,9 @@ export class CourseModulesService {
     }
 
     if (userRole === 'trainer' && course.trainerId.toString() !== userId) {
-      throw new ForbiddenException('You can only view modules of your own courses');
+      throw new ForbiddenException(
+        'You can only view modules of your own courses',
+      );
     }
 
     const modules = await this.moduleModel
@@ -72,11 +87,13 @@ export class CourseModulesService {
 
     if (userRole === 'learner') {
       // Load enrollment and module progress
-      const enrollment = await this.enrollmentModel.findOne({
-        courseId: new Types.ObjectId(courseId),
-        learnerId: new Types.ObjectId(userId),
-        status: 'active',
-      }).lean();
+      const enrollment = await this.enrollmentModel
+        .findOne({
+          courseId: new Types.ObjectId(courseId),
+          learnerId: new Types.ObjectId(userId),
+          status: 'active',
+        })
+        .lean();
 
       if (!enrollment) {
         throw new ForbiddenException('Not enrolled in this course');
@@ -105,7 +122,11 @@ export class CourseModulesService {
     return modules;
   }
 
-  async findOne(id: string, userId?: string, userRole?: string): Promise<CourseModule> {
+  async findOne(
+    id: string,
+    userId?: string,
+    userRole?: string,
+  ): Promise<CourseModule> {
     const module = await this.moduleModel.findById(id).exec();
 
     if (!module) {
@@ -114,7 +135,9 @@ export class CourseModulesService {
 
     // If access control params provided, check permissions
     if (userId && userRole) {
-      const course = await this.coursesService.findOne(module.courseId.toString());
+      const course = await this.coursesService.findOne(
+        module.courseId.toString(),
+      );
 
       // Learner: Can only see modules of published courses
       if (userRole === 'learner' && !course.published) {
@@ -123,7 +146,9 @@ export class CourseModulesService {
 
       // Trainer: Can only see modules of their own courses
       if (userRole === 'trainer' && course.trainerId.toString() !== userId) {
-        throw new ForbiddenException('You can only view modules of your own courses');
+        throw new ForbiddenException(
+          'You can only view modules of your own courses',
+        );
       }
 
       // Admin: Can see all modules (no restriction)
@@ -132,41 +157,57 @@ export class CourseModulesService {
     return module;
   }
 
-
-  async update(id: string, updateModuleDto: UpdateCourseModuleDto, trainerId: string): Promise<CourseModule> {
+  async update(
+    id: string,
+    updateModuleDto: UpdateCourseModuleDto,
+    trainerId: string,
+  ): Promise<CourseModule> {
     const module = await this.findOne(id);
 
-    const course = await this.coursesService.findOne(module.courseId.toString());
+    const course = await this.coursesService.findOne(
+      module.courseId.toString(),
+    );
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only update modules in your own courses');
+      throw new ForbiddenException(
+        'You can only update modules in your own courses',
+      );
     }
 
-    return this.moduleModel.findByIdAndUpdate(
-      id,
-      updateModuleDto,
-      { new: true }
-    ).exec() as Promise<CourseModule>;
+    return this.moduleModel
+      .findByIdAndUpdate(id, updateModuleDto, { new: true })
+      .exec() as Promise<CourseModule>;
   }
-
 
   async remove(id: string, trainerId: string): Promise<void> {
     const module = await this.findOne(id);
 
-    const course = await this.coursesService.findOne(module.courseId.toString());
+    const course = await this.coursesService.findOne(
+      module.courseId.toString(),
+    );
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only delete modules in your own courses');
+      throw new ForbiddenException(
+        'You can only delete modules in your own courses',
+      );
     }
 
     await this.moduleModel.findByIdAndDelete(id).exec();
   }
 
-
-  async addContent(moduleId: string, addContentDto: AddContentDto, trainerId: string, file?: Express.Multer.File,): Promise<CourseModule> {
+  async addContent(
+    moduleId: string,
+    addContentDto: AddContentDto,
+    trainerId: string,
+    file?: Express.Multer.File,
+  ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
-    const course = await this.coursesService.findOne(module.courseId.toString());
+    const course = await this.coursesService.findOne(
+      module.courseId.toString(),
+    );
 
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only add content to your own courses');
+      throw new ForbiddenException(
+        'You can only add content to your own courses',
+      );
     }
 
     let contentUrl: string;
@@ -180,7 +221,9 @@ export class CourseModulesService {
         // Video file uploaded
         contentUrl = `/uploads/videos/${file.filename}`;
       } else {
-        throw new BadRequestException('Video content requires either URL or file upload');
+        throw new BadRequestException(
+          'Video content requires either URL or file upload',
+        );
       }
     }
     // PDF: Only accept file upload
@@ -194,19 +237,21 @@ export class CourseModulesService {
     }
 
     // Add content to module's contents array
-    const updatedModule = await this.moduleModel.findByIdAndUpdate(
-      moduleId,
-      {
-        $push: {
-          contents: {
-            type: addContentDto.type,
-            url: contentUrl,
-            title: addContentDto.title,
+    const updatedModule = await this.moduleModel
+      .findByIdAndUpdate(
+        moduleId,
+        {
+          $push: {
+            contents: {
+              type: addContentDto.type,
+              url: contentUrl,
+              title: addContentDto.title,
+            },
           },
         },
-      },
-      { new: true },
-    ).exec();
+        { new: true },
+      )
+      .exec();
 
     if (!updatedModule) {
       throw new NotFoundException(`Module with ID ${moduleId} not found`);
@@ -222,32 +267,40 @@ export class CourseModulesService {
     trainerId: string,
   ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
-    const course = await this.coursesService.findOne(module.courseId.toString());
+    const course = await this.coursesService.findOne(
+      module.courseId.toString(),
+    );
 
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only update content in your own courses');
+      throw new ForbiddenException(
+        'You can only update content in your own courses',
+      );
     }
 
     // Find content by contentId
     const content = module.contents.find(
-      (c: any) => c._id.toString() === contentId
+      (c: any) => c._id.toString() === contentId,
     );
 
     if (!content) {
-      throw new NotFoundException(`Content with ID ${contentId} not found in this module`);
+      throw new NotFoundException(
+        `Content with ID ${contentId} not found in this module`,
+      );
     }
 
     // Update content fields
-    const updatedModule = await this.moduleModel.findOneAndUpdate(
-      { _id: moduleId, 'contents._id': new Types.ObjectId(contentId) },
-      {
-        $set: {
-          'contents.$.title': updateContentDto.title || content.title,
-          'contents.$.url': updateContentDto.url || content.url,
+    const updatedModule = await this.moduleModel
+      .findOneAndUpdate(
+        { _id: moduleId, 'contents._id': new Types.ObjectId(contentId) },
+        {
+          $set: {
+            'contents.$.title': updateContentDto.title || content.title,
+            'contents.$.url': updateContentDto.url || content.url,
+          },
         },
-      },
-      { new: true },
-    ).exec();
+        { new: true },
+      )
+      .exec();
 
     if (!updatedModule) {
       throw new NotFoundException(`Module or content not found`);
@@ -262,22 +315,28 @@ export class CourseModulesService {
     trainerId: string,
   ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
-    const course = await this.coursesService.findOne(module.courseId.toString());
+    const course = await this.coursesService.findOne(
+      module.courseId.toString(),
+    );
 
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only delete content in your own courses');
+      throw new ForbiddenException(
+        'You can only delete content in your own courses',
+      );
     }
 
     // Remove content from contents array
-    const updatedModule = await this.moduleModel.findByIdAndUpdate(
-      moduleId,
-      {
-        $pull: {
-          contents: { _id: new Types.ObjectId(contentId) },
+    const updatedModule = await this.moduleModel
+      .findByIdAndUpdate(
+        moduleId,
+        {
+          $pull: {
+            contents: { _id: new Types.ObjectId(contentId) },
+          },
         },
-      },
-      { new: true },
-    ).exec();
+        { new: true },
+      )
+      .exec();
 
     if (!updatedModule) {
       throw new NotFoundException(`Module with ID ${moduleId} not found`);
@@ -287,19 +346,20 @@ export class CourseModulesService {
   }
 
   async getCourseResume(courseId: string, learnerId: string) {
-
-    // check if course exits or enroled in 
+    // check if course exits or enroled in
     const course = await this.coursesService.findOne(courseId);
     if (!course) {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
 
     // Get enrollment
-    const enrollment = await this.enrollmentModel.findOne({
-      courseId: new Types.ObjectId(courseId),
-      learnerId: new Types.ObjectId(learnerId),
-      status: 'active',
-    }).lean();
+    const enrollment = await this.enrollmentModel
+      .findOne({
+        courseId: new Types.ObjectId(courseId),
+        learnerId: new Types.ObjectId(learnerId),
+        status: 'active',
+      })
+      .lean();
 
     if (!enrollment)
       throw new NotFoundException('No active enrollment found for this course');
@@ -308,7 +368,7 @@ export class CourseModulesService {
     const last = enrollment.moduleProgress
       .filter(
         (mp): mp is ModuleProgressWithResume =>
-          mp.resume !== undefined && mp.resume !== null
+          mp.resume !== undefined && mp.resume !== null,
       )
       .sort(
         (a, b) =>
@@ -331,7 +391,11 @@ export class CourseModulesService {
       .sort({ order: 1 })
       .lean();
 
-    if (!firstModule || !firstModule.contents || firstModule.contents.length === 0) {
+    if (
+      !firstModule ||
+      !firstModule.contents ||
+      firstModule.contents.length === 0
+    ) {
       return null; // no content in course
     }
 
@@ -347,30 +411,35 @@ export class CourseModulesService {
     learnerId: string,
     dto: SaveResumeDto,
   ) {
-
-    // check if course exits or enroled in 
+    // check if course exits or enroled in
     const course = await this.coursesService.findOne(courseId);
     if (!course) {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
 
     // Get enrollment
-    const enrollment = await this.enrollmentModel.findOne({
-      courseId: new Types.ObjectId(courseId),
-      learnerId: new Types.ObjectId(learnerId),
-      status: 'active',
-    }).lean();
+    const enrollment = await this.enrollmentModel
+      .findOne({
+        courseId: new Types.ObjectId(courseId),
+        learnerId: new Types.ObjectId(learnerId),
+        status: 'active',
+      })
+      .lean();
 
     if (!enrollment)
       throw new NotFoundException('No active enrollment found for this course');
 
     // check module exists in course
-    const module = await this.moduleModel.findOne({
-      _id: dto.moduleId,
-      courseId: new Types.ObjectId(courseId),
-    }).lean();
+    const module = await this.moduleModel
+      .findOne({
+        _id: dto.moduleId,
+        courseId: new Types.ObjectId(courseId),
+      })
+      .lean();
     if (!module) {
-      throw new NotFoundException(`Module with ID ${dto.moduleId} not found in this course`);
+      throw new NotFoundException(
+        `Module with ID ${dto.moduleId} not found in this course`,
+      );
     }
 
     // check if content exists in module
@@ -378,28 +447,32 @@ export class CourseModulesService {
       (c: any) => c._id.toString() === dto.contentId,
     );
     if (!content) {
-      throw new NotFoundException(`Content with ID ${dto.contentId} not found in this module`);
+      throw new NotFoundException(
+        `Content with ID ${dto.contentId} not found in this module`,
+      );
     }
 
     // Update or add resume in moduleProgress
-    const updated = await this.enrollmentModel.findOneAndUpdate(
-      {
-        courseId: new Types.ObjectId(courseId),
-        learnerId: new Types.ObjectId(learnerId),
-        status: 'active',
-        'moduleProgress.moduleId': new Types.ObjectId(dto.moduleId),
-      },
-      {
-        $set: {
-          'moduleProgress.$.resume': {
-            contentId: new Types.ObjectId(dto.contentId),
-            position: dto.position,
-            updatedAt: new Date(),
+    const updated = await this.enrollmentModel
+      .findOneAndUpdate(
+        {
+          courseId: new Types.ObjectId(courseId),
+          learnerId: new Types.ObjectId(learnerId),
+          status: 'active',
+          'moduleProgress.moduleId': new Types.ObjectId(dto.moduleId),
+        },
+        {
+          $set: {
+            'moduleProgress.$.resume': {
+              contentId: new Types.ObjectId(dto.contentId),
+              position: dto.position,
+              updatedAt: new Date(),
+            },
           },
         },
-      },
-      { new: true },
-    ).exec();
+        { new: true },
+      )
+      .exec();
 
     if (!updated) {
       throw new NotFoundException(
@@ -410,4 +483,3 @@ export class CourseModulesService {
     return updated;
   }
 }
-

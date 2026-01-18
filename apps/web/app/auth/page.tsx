@@ -32,18 +32,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#261144] via-[#3a1a5e] to-[#1c0f33] opacity-95"></div>
+      <div className="absolute inset-0 bg-linear-to-br from-[#261144] via-[#3a1a5e] to-[#1c0f33] opacity-95"></div>
       <div className="absolute top-0 left-0 w-96 h-96 bg-[#ad82de] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#9966cc] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
       
       {/* Login card */}
       <div className="relative w-full max-w-md">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#ad82de] to-[#9966cc] rounded-3xl blur-xl opacity-30"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-[#ad82de] to-[#9966cc] rounded-3xl blur-xl opacity-30"></div>
         
         <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
           {/* Logo/Icon area */}
           <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#ad82de] to-[#9966cc] rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-300">
+            <div className="w-20 h-20 bg-linear-to-br from-[#ad82de] to-[#9966cc] rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-300">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -51,7 +51,7 @@ export default function LoginPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-white to-[#ad82de] bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-center mb-2 bg-linear-to-r from-white to-[#ad82de] bg-clip-text text-transparent">
             Bienvenue
           </h1>
           <p className="text-center text-white/60 mb-8">Connectez-vous pour continuer</p>
@@ -105,7 +105,7 @@ export default function LoginPage() {
           <button
             onClick={handleLogin}
             disabled={isLoading}
-            className="w-full py-4 bg-gradient-to-r from-[#ad82de] to-[#9966cc] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full py-4 bg-linear-to-r from-[#ad82de] to-[#9966cc] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -26,19 +31,24 @@ export class EnrollmentsService {
     }
 
     // 3. Check for duplicate enrollment
-    const existingEnrollment = await this.enrollmentModel.findOne({
-      learnerId: new Types.ObjectId(learnerId),
-      courseId: new Types.ObjectId(courseId),
-    }).exec();
+    const existingEnrollment = await this.enrollmentModel
+      .findOne({
+        learnerId: new Types.ObjectId(learnerId),
+        courseId: new Types.ObjectId(courseId),
+      })
+      .exec();
 
     if (existingEnrollment) {
       // Allow re-enrollment if dropped/cancelled
-      if (existingEnrollment.status === 'dropped' || existingEnrollment.status === 'cancelled') {
+      if (
+        existingEnrollment.status === 'dropped' ||
+        existingEnrollment.status === 'cancelled'
+      ) {
         existingEnrollment.status = 'active';
         existingEnrollment.overallProgress = 0;
         return existingEnrollment.save();
       }
-      
+
       throw new BadRequestException('Already enrolled in this course');
     }
 
@@ -56,7 +66,7 @@ export class EnrollmentsService {
 
   async findByLearner(learnerId: string): Promise<Enrollment[]> {
     return this.enrollmentModel
-      .find({ 
+      .find({
         learnerId: new Types.ObjectId(learnerId),
         status: 'active',
       })
@@ -65,14 +75,19 @@ export class EnrollmentsService {
       .exec();
   }
 
-  async findByCourse(courseId: string, trainerId: string): Promise<Enrollment[]> {
+  async findByCourse(
+    courseId: string,
+    trainerId: string,
+  ): Promise<Enrollment[]> {
     // Verify course belongs to trainer
     const course = await this.courseModel.findById(courseId).exec();
     if (!course) {
       throw new NotFoundException('Course not found');
     }
     if (course.trainerId.toString() !== trainerId) {
-      throw new ForbiddenException('You can only view enrollments of your own courses');
+      throw new ForbiddenException(
+        'You can only view enrollments of your own courses',
+      );
     }
 
     // Return enrollments with learner details
@@ -83,13 +98,17 @@ export class EnrollmentsService {
       .exec();
   }
 
-  async findOne(id: string, userId: string, userRole: string): Promise<Enrollment> {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+  ): Promise<Enrollment> {
     const enrollment = await this.enrollmentModel
       .findById(id)
       .populate('courseId', 'title description')
       .populate('learnerId', 'fullName email')
       .exec();
-    
+
     if (!enrollment) {
       throw new NotFoundException(`Enrollment with ID ${id} not found`);
     }
@@ -101,9 +120,13 @@ export class EnrollmentsService {
 
     // Trainer can view enrollments of their courses
     if (userRole === 'trainer') {
-      const course = await this.courseModel.findById(enrollment.courseId).exec();
+      const course = await this.courseModel
+        .findById(enrollment.courseId)
+        .exec();
       if (course && course.trainerId.toString() !== userId) {
-        throw new ForbiddenException('You can only view enrollments of your own courses');
+        throw new ForbiddenException(
+          'You can only view enrollments of your own courses',
+        );
       }
     }
 
@@ -112,14 +135,16 @@ export class EnrollmentsService {
 
   async unenroll(enrollmentId: string, learnerId: string): Promise<Enrollment> {
     const enrollment = await this.enrollmentModel.findById(enrollmentId).exec();
-    
+
     if (!enrollment) {
       throw new NotFoundException('Enrollment not found');
     }
 
     // Verify ownership
     if (enrollment.learnerId.toString() !== learnerId) {
-      throw new ForbiddenException('You can only unenroll from your own enrollments');
+      throw new ForbiddenException(
+        'You can only unenroll from your own enrollments',
+      );
     }
 
     // Mark as dropped (don't delete, keep history)
@@ -135,11 +160,14 @@ export class EnrollmentsService {
       .exec();
   }
 
-  async update(id: string, updateEnrollmentDto: UpdateEnrollmentDto): Promise<Enrollment> {
+  async update(
+    id: string,
+    updateEnrollmentDto: UpdateEnrollmentDto,
+  ): Promise<Enrollment> {
     const enrollment = await this.enrollmentModel
       .findByIdAndUpdate(id, updateEnrollmentDto, { new: true })
       .exec();
-    
+
     if (!enrollment) {
       throw new NotFoundException(`Enrollment with ID ${id} not found`);
     }

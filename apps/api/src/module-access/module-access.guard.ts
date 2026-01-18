@@ -1,10 +1,22 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model, Types } from "mongoose";
-import { CourseModule, CourseModuleDocument } from "src/course-modules/schemas/course-module.schema";
-import { Enrollment, EnrollmentDocument } from "src/enrollments/schemas/enrollment.schema";
-import { QuizzesModule } from "src/quizzes/quizzes.module";
-import { QuizDocument } from "src/quizzes/schemas/quiz.schema";
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import {
+  CourseModule,
+  CourseModuleDocument,
+} from 'src/course-modules/schemas/course-module.schema';
+import {
+  Enrollment,
+  EnrollmentDocument,
+} from 'src/enrollments/schemas/enrollment.schema';
+import { QuizzesModule } from 'src/quizzes/quizzes.module';
+import { QuizDocument } from 'src/quizzes/schemas/quiz.schema';
 
 @Injectable()
 export class ModuleAccessGuard implements CanActivate {
@@ -17,7 +29,7 @@ export class ModuleAccessGuard implements CanActivate {
 
     @InjectModel('Quiz') // <-- fixed here
     private readonly quizModel: Model<QuizDocument>,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -32,27 +44,33 @@ export class ModuleAccessGuard implements CanActivate {
     const courseId = module.courseId;
 
     // Load enrollment
-    const enrollment = await this.enrollmentModel.findOne({
-      courseId,
-      learnerId: new Types.ObjectId(learnerId),
-      status: 'active',
-    }).lean();
+    const enrollment = await this.enrollmentModel
+      .findOne({
+        courseId,
+        learnerId: new Types.ObjectId(learnerId),
+        status: 'active',
+      })
+      .lean();
 
-    if (!enrollment) throw new ForbiddenException('Not enrolled in this course');
+    if (!enrollment)
+      throw new ForbiddenException('Not enrolled in this course');
 
     // First module is always accessible
     if (module.order === 1) return true;
 
     // Check previous module completion
-    const previousModule = await this.moduleModel.findOne({
-      courseId,
-      order: module.order - 1,
-    }).lean();
+    const previousModule = await this.moduleModel
+      .findOne({
+        courseId,
+        order: module.order - 1,
+      })
+      .lean();
 
-    if (!previousModule) throw new ForbiddenException('Previous module not found');
+    if (!previousModule)
+      throw new ForbiddenException('Previous module not found');
 
     const previousProgress = enrollment.moduleProgress.find(
-      mp => mp.moduleId.toString() === previousModule._id.toString(),
+      (mp) => mp.moduleId.toString() === previousModule._id.toString(),
     );
 
     if (!previousProgress || !previousProgress.completed)

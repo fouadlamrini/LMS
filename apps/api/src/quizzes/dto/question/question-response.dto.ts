@@ -1,27 +1,27 @@
 import { Expose, Type } from 'class-transformer';
 
 export class OptionDto {
-    @Expose()
-    _id!: string;
+  @Expose()
+  _id!: string;
 
-    @Expose()
-    text!: string;
+  @Expose()
+  text!: string;
 }
 
 export class QuestionResponseDto {
-    @Expose()
-    _id!: string;
+  @Expose()
+  _id!: string;
 
-    @Expose()
-    text!: string;
+  @Expose()
+  text!: string;
 
-    @Expose()
-    type!: string;
+  @Expose()
+  type!: string;
 
-    @Expose()
-    score!: number;
+  @Expose()
+  score!: number;
 
-    @Expose()
-    @Type(() => OptionDto)
-    options?: OptionDto[];
+  @Expose()
+  @Type(() => OptionDto)
+  options?: OptionDto[];
 }

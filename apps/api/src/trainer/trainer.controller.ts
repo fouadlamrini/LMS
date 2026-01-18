@@ -1,4 +1,12 @@
-import { Controller, Get, Param, ParseBoolPipe, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseBoolPipe,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import type { AuthenticatedRequest } from 'src/auth/authenticated-request.type';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -10,9 +18,8 @@ import { TrainerService } from './trainer.service';
 @Roles(Role.TRAINER)
 @Controller('trainer')
 export class TrainerController {
-  constructor(private readonly trainerService: TrainerService) { }
+  constructor(private readonly trainerService: TrainerService) {}
 
-  
   @Get('courses/:courseId/learners')
   async getEnrolledLearners(
     @Param('courseId') courseId: string,
@@ -20,26 +27,20 @@ export class TrainerController {
   ) {
     const trainerId = req.user.userId;
 
-    return this.trainerService.getEnrolledLearners(
+    return this.trainerService.getEnrolledLearners(courseId, trainerId);
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.TRAINER)
+  @Get('courses/:courseId/learners/:learnerId/report')
+  async getLearnerReport(
+    @Param('courseId') courseId: string,
+    @Param('learnerId') learnerId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.trainerService.getLearnerReport(
+      req.user.userId,
       courseId,
-      trainerId,
+      learnerId,
     );
   }
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.TRAINER)
-@Get('courses/:courseId/learners/:learnerId/report')
-async getLearnerReport(
-  @Param('courseId') courseId: string,
-  @Param('learnerId') learnerId: string,
-  @Req() req : AuthenticatedRequest,
-) {
-  return this.trainerService.getLearnerReport(
-    req.user.userId,
-    courseId,
-    learnerId
-  );
-}
-
-
-
 }

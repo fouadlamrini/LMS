@@ -4,7 +4,10 @@ import { TrainerService } from './trainer.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Course, CourseSchema } from '../courses/schemas/course.schema';
 
-import { Enrollment, EnrollmentSchema } from '../enrollments/schemas/enrollment.schema';
+import {
+  Enrollment,
+  EnrollmentSchema,
+} from '../enrollments/schemas/enrollment.schema';
 
 @Module({
   imports: [
@@ -17,4 +20,3 @@ import { Enrollment, EnrollmentSchema } from '../enrollments/schemas/enrollment.
   providers: [TrainerService],
 })
 export class TrainerModule {}
-

@@ -4,4 +4,3 @@ export class CreateEnrollmentDto {
   @IsMongoId()
   courseId!: string;
 }
-

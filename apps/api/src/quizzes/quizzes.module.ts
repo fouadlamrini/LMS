@@ -8,9 +8,15 @@ import { QuestionsService } from './services/questions.service';
 import { QuizAttemptsController } from './controllers/quiz-attempts.controller';
 import { QuizAttemptsService } from './services/quiz-attempts.service';
 import { QuizAttempt, QuizAttemptSchema } from './schemas/quiz-attempt.schema';
-import { Enrollment, EnrollmentSchema } from 'src/enrollments/schemas/enrollment.schema';
+import {
+  Enrollment,
+  EnrollmentSchema,
+} from 'src/enrollments/schemas/enrollment.schema';
 import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
-import { CourseModule, CourseModuleSchema } from 'src/course-modules/schemas/course-module.schema';
+import {
+  CourseModule,
+  CourseModuleSchema,
+} from 'src/course-modules/schemas/course-module.schema';
 
 @Module({
   imports: [
@@ -22,6 +28,11 @@ import { CourseModule, CourseModuleSchema } from 'src/course-modules/schemas/cou
     ]),
   ],
   controllers: [QuizzesController, QuestionsController, QuizAttemptsController],
-  providers: [QuizzesService, QuestionsService, QuizAttemptsService, ModuleAccessGuard],
+  providers: [
+    QuizzesService,
+    QuestionsService,
+    QuizAttemptsService,
+    ModuleAccessGuard,
+  ],
 })
-export class QuizzesModule { }
+export class QuizzesModule {}

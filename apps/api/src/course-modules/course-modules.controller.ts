@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -16,7 +29,7 @@ import { SaveResumeDto } from './dto/save-resume.dto';
 
 /**
  * Course Modules Controller
- * 
+ *
  * Endpoints:
  * - POST   /course-modules                              - Create module (Trainer only)
  * - POST   /course-modules/:id/content                  - Add PDF/Video content (Trainer only)
@@ -30,9 +43,7 @@ import { SaveResumeDto } from './dto/save-resume.dto';
 @Controller('course-modules')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CourseModulesController {
-  constructor(private readonly courseModulesService: CourseModulesService) {
-  }
-
+  constructor(private readonly courseModulesService: CourseModulesService) {}
 
   @Post()
   @Roles(Role.TRAINER)
@@ -51,7 +62,8 @@ export class CourseModulesController {
           callback(null, dest);
         },
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
         },
@@ -68,8 +80,10 @@ export class CourseModulesController {
 
         if (!allowedMimeTypes.includes(file.mimetype)) {
           return callback(
-            new BadRequestException('Only PDF and Video files (mp4, webm, avi, mov) are allowed'),
-            false
+            new BadRequestException(
+              'Only PDF and Video files (mp4, webm, avi, mov) are allowed',
+            ),
+            false,
           );
         }
         callback(null, true);
@@ -85,7 +99,12 @@ export class CourseModulesController {
     @UploadedFile() file: Express.Multer.File,
     @Request() req: any,
   ) {
-    return this.courseModulesService.addContent(id, addContentDto, req.user.userId, file);
+    return this.courseModulesService.addContent(
+      id,
+      addContentDto,
+      req.user.userId,
+      file,
+    );
   }
 
   @Patch(':moduleId/content/:contentId')
@@ -96,7 +115,12 @@ export class CourseModulesController {
     @Body() updateContentDto: UpdateContentDto,
     @Request() req: any,
   ) {
-    return this.courseModulesService.updateContent(moduleId, contentId, updateContentDto, req.user.userId);
+    return this.courseModulesService.updateContent(
+      moduleId,
+      contentId,
+      updateContentDto,
+      req.user.userId,
+    );
   }
 
   @Delete(':moduleId/content/:contentId')
@@ -106,31 +130,47 @@ export class CourseModulesController {
     @Param('contentId') contentId: string,
     @Request() req: any,
   ) {
-    return this.courseModulesService.removeContent(moduleId, contentId, req.user.userId);
+    return this.courseModulesService.removeContent(
+      moduleId,
+      contentId,
+      req.user.userId,
+    );
   }
-
 
   @Get('course/:courseId')
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findByCourse(@Param('courseId') courseId: string, @Request() req: any) {
-    return this.courseModulesService.findByCourse(courseId, req.user.userId, req.user.role);
+    return this.courseModulesService.findByCourse(
+      courseId,
+      req.user.userId,
+      req.user.role,
+    );
   }
-
 
   @Get(':id')
   @UseGuards(ModuleAccessGuard)
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findOne(@Param('id') id: string, @Request() req: any) {
-    return this.courseModulesService.findOne(id, req.user.userId, req.user.role);
+    return this.courseModulesService.findOne(
+      id,
+      req.user.userId,
+      req.user.role,
+    );
   }
-
 
   @Patch(':id')
   @Roles(Role.TRAINER)
-  update(@Param('id') id: string, @Body() updateModuleDto: UpdateCourseModuleDto, @Request() req: any,) {
-    return this.courseModulesService.update(id, updateModuleDto, req.user.userId);
+  update(
+    @Param('id') id: string,
+    @Body() updateModuleDto: UpdateCourseModuleDto,
+    @Request() req: any,
+  ) {
+    return this.courseModulesService.update(
+      id,
+      updateModuleDto,
+      req.user.userId,
+    );
   }
-
 
   @Delete(':id')
   @Roles(Role.TRAINER)
@@ -140,14 +180,8 @@ export class CourseModulesController {
 
   @Get('courses/:courseId/resume')
   @Roles(Role.LEARNER)
-  getCourseResume(
-    @Param('courseId') courseId: string,
-    @Request() req: any,
-  ) {
-    return this.courseModulesService.getCourseResume(
-      courseId,
-      req.user.userId,
-    );
+  getCourseResume(@Param('courseId') courseId: string, @Request() req: any) {
+    return this.courseModulesService.getCourseResume(courseId, req.user.userId);
   }
 
   @Patch('courses/:courseId/resume')
