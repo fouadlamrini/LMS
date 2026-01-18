@@ -23,7 +23,7 @@ export default function AdminSidebar({ user }: { user: User }) {
     ];
     const handleLogout = () => {
         localStorage.removeItem("token");
-        window.location.href = "/auth"; // redirection
+        window.location.href = "/login"; // redirection
     };
     return (
         <aside className="w-64 bg-surface border-r border-border min-h-screen flex flex-col">
@@ -32,7 +32,6 @@ export default function AdminSidebar({ user }: { user: User }) {
                 <div className="text-xl font-bold text-foreground">
                     LMS<span className="text-secondary">Platform</span>
                 </div>
-                <p className="text-xs text-secondary mt-1 font-semibold">Admin Panel</p>
             </div>
 
             {/* User Info */}
@@ -73,13 +72,15 @@ export default function AdminSidebar({ user }: { user: User }) {
                 </ul>
             </nav>
 
+
             {/* Logout */}
             <div className="p-4 border-t border-border">
                 <button
                     onClick={handleLogout}
-                    className="bg-fuchsia-300 text-white p-2 rounded"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error/10 transition-all w-full"
                 >
-                    Logout
+                    <LogOut size={20} />
+                    <span className="font-medium text-sm">Logout</span>
                 </button>
             </div>
         </aside>

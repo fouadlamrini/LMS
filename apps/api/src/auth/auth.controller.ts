@@ -1,18 +1,20 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
-    // verify credentials
-    const user = await this.authService.validateUser(body.email, body.password);
-    if (!user) {
-      return { message: 'Email w password ghalat' };
+    const result = await this.authService.validateUser(body.email, body.password);
+
+    if (result.error) {
+      throw new UnauthorizedException(result.error);
     }
-    // generate JWT
-    return this.authService.login(user);
+
+    // result.user is guaranteed to exist
+    return this.authService.login(result.user!);
   }
+
 }

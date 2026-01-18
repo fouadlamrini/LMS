@@ -28,7 +28,7 @@ export default function PublicHeader() {
                         Log in
                     </Link>
                     <Link
-                        href="/register"
+                        href="/login"
                         className="bg-primary text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-primary-hover transition shadow-sm"
                     >
                         Get Started
