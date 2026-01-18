@@ -14,6 +14,8 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
+  app.setGlobalPrefix('api');
+
   // ENABLE DTO VALIDATION
   app.useGlobalPipes(
     new ValidationPipe({

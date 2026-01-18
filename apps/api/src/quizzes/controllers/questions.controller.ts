@@ -11,7 +11,7 @@ import { QuestionsService } from '../services/questions.service';
 import { CreateQuestionDto } from '../dto/question/create-question.dto';
 import { UpdateQuestionDto } from '../dto/question/update-question.dto';
 
-@Controller('api/quizzes/:quizId/questions')
+@Controller('quizzes/:quizId/questions')
 export class QuestionsController {
     constructor(private readonly questionsService: QuestionsService) { }
 

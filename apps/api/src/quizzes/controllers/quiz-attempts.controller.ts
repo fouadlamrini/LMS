@@ -7,7 +7,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/roles/role.enum';
 import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
 
-@Controller('api/courses/:courseId/quizzes')
+@Controller('courses/:courseId/quizzes')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.LEARNER)
 export class QuizAttemptsController {
