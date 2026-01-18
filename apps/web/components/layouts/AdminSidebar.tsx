@@ -21,7 +21,10 @@ export default function AdminSidebar({ user }: { user: User }) {
         { href: '/permissions', label: 'Permissions', icon: Shield },
         { href: '/settings', label: 'System Settings', icon: Settings },
     ];
-
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth"; // redirection
+  };
     return (
         <aside className="w-64 bg-surface border-r border-border min-h-screen flex flex-col">
             {/* Logo */}
@@ -72,16 +75,12 @@ export default function AdminSidebar({ user }: { user: User }) {
 
             {/* Logout */}
             <div className="p-4 border-t border-border">
-                <button
-                    onClick={() => {
-                        // Handle logout
-                        console.log('Logout clicked');
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-error/10 transition-all w-full"
-                >
-                    <LogOut size={20} />
-                    <span className="font-medium text-sm">Logout</span>
-                </button>
+                 <button
+      onClick={handleLogout}
+      className="bg-fuchsia-300 text-white p-2 rounded"
+    >
+      Logout
+    </button>
             </div>
         </aside>
     );

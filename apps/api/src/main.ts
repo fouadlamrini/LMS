@@ -8,7 +8,11 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
+  
+  app.enableCors({
+  origin: "http://localhost:3001", // ton frontend Next.js
+  credentials: true,
+});
   // Serve static files (uploaded PDFs)
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
