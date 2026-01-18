@@ -1,41 +1,25 @@
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useAuth } from '@/providers/AuthProvider';
 import AdminSidebar from '@/components/layouts/AdminSidebar';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { Role } from '@/types/enums';
 
-async function getServerSession() {
-    // TODO: Implement actual session check
-    return {
-        user: {
-            id: '3',
-            name: 'Admin User',
-            email: 'admin@example.com',
-            role: 'ADMIN',
-        },
-    };
-}
-
-export default async function AdminLayout({
+export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const session = await getServerSession();
-
-    if (!session) {
-        redirect('/login');
-    }
-
-    if (session.user.role !== 'ADMIN') {
-        redirect('/unauthorized');
-    }
+    const { user } = useAuth();
 
     return (
-        <div className="min-h-screen bg-background flex">
-            <AdminSidebar user={session.user} />
-            <main className="flex-1 overflow-auto">
-                <div className="p-8">
+        <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+            <div className="min-h-screen bg-background flex">
+                {user && <AdminSidebar user={user} />}
+                <main className="flex-1 overflow-auto p-8">
                     {children}
-                </div>
-            </main>
-        </div>
+                </main>
+            </div>
+        </ProtectedRoute>
     );
 }

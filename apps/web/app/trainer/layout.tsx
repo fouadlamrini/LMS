@@ -1,41 +1,27 @@
-import { redirect } from 'next/navigation';
+'use client';
+
 import TrainerSidebar from '@/components/layouts/TrainerSidebar';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { Role } from '@/types/enums';
+import { useAuth } from '@/providers/AuthProvider';
 
-async function getServerSession() {
-    // TODO: Implement actual session check
-    return {
-        user: {
-            id: '2',
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            role: 'TRAINER',
-        },
-    };
-}
-
-export default async function TrainerLayout({
+export default function TrainerLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const session = await getServerSession();
-
-    if (!session) {
-        redirect('/login');
-    }
-
-    if (session.user.role !== 'TRAINER') {
-        redirect('/unauthorized');
-    }
+    const { user } = useAuth();
 
     return (
-        <div className="min-h-screen bg-background flex">
-            <TrainerSidebar user={session.user} />
-            <main className="flex-1 overflow-auto">
-                <div className="p-8 max-w-7xl mx-auto">
-                    {children}
-                </div>
-            </main>
-        </div>
+        <ProtectedRoute allowedRoles={[Role.TRAINER]}>
+            <div className="min-h-screen bg-background flex">
+                {user && <TrainerSidebar user={user} />}
+                <main className="flex-1 overflow-auto">
+                    <div className="p-8 max-w-7xl mx-auto">
+                        {children}
+                    </div>
+                </main>
+            </div>
+        </ProtectedRoute>
     );
 }

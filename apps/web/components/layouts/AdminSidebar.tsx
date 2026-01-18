@@ -3,13 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Users, BookOpen, Shield, Settings, LogOut } from 'lucide-react';
-
-type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-};
+import { User } from '@/types';
 
 export default function AdminSidebar({ user }: { user: User }) {
     const pathname = usePathname();
@@ -41,7 +35,7 @@ export default function AdminSidebar({ user }: { user: User }) {
                         <Shield size={20} className="text-secondary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{user.fullName}</p>
                         <p className="text-xs text-secondary truncate">Administrator</p>
                     </div>
                 </div>
