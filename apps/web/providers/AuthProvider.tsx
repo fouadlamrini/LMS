@@ -27,9 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Helper: Redirect user based on their role
   const navigateByRole = useCallback((role: Role) => {
     const routes = {
-      [Role.ADMIN]: '/admin',
-      [Role.TRAINER]: '/trainer',
-      [Role.LEARNER]: '/learner',
+      [Role.ADMIN]: '/admin/dashoard',
+      [Role.TRAINER]: '/trainer/dashoard',
+      [Role.LEARNER]: '/learner/dashoard',
     };
     router.push(routes[role] || '/login');
   }, [router]);
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      
+
       if (!data.access_token) throw new Error(data.message || 'Login failed');
 
       localStorage.setItem('token', data.access_token);
@@ -80,9 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Fetch fresh user data
       const { data: userData } = await api.get('/auth/me');
-      
+
       setUser(userData);
-      
+
       navigateByRole(userData.role);
     } catch (error: any) {
       clearAuth();

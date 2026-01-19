@@ -11,7 +11,7 @@ export default function GuestGuard({ children }: { children: React.ReactNode }) 
     useEffect(() => {
         if (!isLoading && isAuthenticated && user) {
             // Redirect logged-in users to their specific dashboard
-            router.push(`/${user.role.toLowerCase()}`);
+            router.push(`/${user.role.toLowerCase()}/dashboard`);
         }
     }, [isLoading, isAuthenticated, user, router]);
 
