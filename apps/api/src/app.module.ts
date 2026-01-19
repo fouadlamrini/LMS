@@ -13,7 +13,18 @@ import { TrainerModule } from './trainer/trainer.module';
 import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: (env) => {
+        if (!env.JWT_SECRET) {
+          throw new Error('JWT_SECRET missing');
+        }
+        if (!env.MONGO_URI) {
+          throw new Error('MONGO_URI missing');
+        }
+        return env;
+      },
+    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -38,4 +49,4 @@ import { AuthModule } from './auth/auth.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

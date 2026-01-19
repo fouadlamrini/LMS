@@ -23,7 +23,7 @@ export default function PublicHeader() {
                 <div className="flex gap-4">
                     <Link
                         href="/login"
-                        className="text-sm font-semibold px-4 py-2 hover:text-primary transition"
+                        className="text-sm font-semibold px-4 py-2 text-muted hover:text-foreground transition"
                     >
                         Log in
                     </Link>
