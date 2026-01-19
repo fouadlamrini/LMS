@@ -27,9 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Helper: Redirect user based on their role
   const navigateByRole = useCallback((role: Role) => {
     const routes = {
-      [Role.ADMIN]: '/admin/dashoard',
-      [Role.TRAINER]: '/trainer/dashoard',
-      [Role.LEARNER]: '/learner/dashoard',
+      [Role.ADMIN]: '/admin/dashboard',
+      [Role.TRAINER]: '/trainer/dashboard',
+      [Role.LEARNER]: '/learner/dashboard',
     };
     router.push(routes[role] || '/login');
   }, [router]);
