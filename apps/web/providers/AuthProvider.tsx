@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Fetch fresh user data
       const { data: userData } = await api.get('/auth/me');
+      
       setUser(userData);
       
       navigateByRole(userData.role);

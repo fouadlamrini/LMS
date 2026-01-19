@@ -1,11 +1,13 @@
 import { Controller, Post, Body, UnauthorizedException, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
+import { Role } from 'src/roles/role.enum';
 
 interface JwtPayload {
   sub: string;
   email: string;
-  role: 'ADMIN' | 'TRAINER' | 'LEARNER';
+  role: Role;
+  fullName: string;
 }
 @Controller('auth')
 export class AuthController {
@@ -30,6 +32,7 @@ export class AuthController {
       userId: req.user.sub,
       email: req.user.email,
       role: req.user.role,
+      fullName: req.user.fullName,
     };
   }
 

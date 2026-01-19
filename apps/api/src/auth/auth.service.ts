@@ -8,6 +8,7 @@ interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  fullName: string;
 }
 
 @Injectable()
@@ -37,6 +38,7 @@ export class AuthService {
       sub: user._id.toString(),
       email: user.email,
       role: user.role,
+      fullName: user.fullName,
     };
     return {
       access_token: this.jwtService.sign(payload),

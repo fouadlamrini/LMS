@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, BarChart3, User, LogOut } from 'lucide-react';
 import { User as UserType } from '@/types';
+import LogoutButton from '../auth/LogoutButton';
 
 export default function LearnerSidebar({ user }: { user: UserType }) {
     const pathname = usePathname();
@@ -68,17 +69,9 @@ export default function LearnerSidebar({ user }: { user: UserType }) {
 
             {/* Logout */}
             <div className="p-4 border-t border-border">
-                <button
-                    onClick={() => {
-                        // Handle logout
-                        console.log('Logout clicked');
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error/10 transition-all w-full"
-                >
-                    <LogOut size={20} />
-                    <span className="font-medium text-sm">Logout</span>
-                </button>
+                <LogoutButton />
             </div>
+
         </aside>
     );
 }

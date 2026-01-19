@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, Users, BarChart3, Settings, LogOut } from 'lucide-react';
 import { User } from '@/types';
+import LogoutButton from '../auth/LogoutButton';
 
 export default function TrainerSidebar({ user }: { user: User }) {
     const pathname = usePathname();
@@ -30,7 +31,7 @@ export default function TrainerSidebar({ user }: { user: User }) {
             <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-                        <span className="text-secondary font-semibold text-sm">
+                        <span className="text-secondary font-semibold text-xl">
                             {user.fullName.charAt(0).toUpperCase()}
                         </span>
                     </div>
@@ -53,8 +54,8 @@ export default function TrainerSidebar({ user }: { user: User }) {
                                 <Link
                                     href={link.href}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                                            ? 'bg-secondary text-white shadow-sm'
-                                            : 'text-muted hover:bg-background hover:text-foreground'
+                                        ? 'bg-secondary text-white shadow-sm'
+                                        : 'text-muted hover:bg-background hover:text-foreground'
                                         }`}
                                 >
                                     <Icon size={20} />
@@ -68,17 +69,9 @@ export default function TrainerSidebar({ user }: { user: User }) {
 
             {/* Logout */}
             <div className="p-4 border-t border-border">
-                <button
-                    onClick={() => {
-                        // Handle logout
-                        console.log('Logout clicked');
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error/10 transition-all w-full"
-                >
-                    <LogOut size={20} />
-                    <span className="font-medium text-sm">Logout</span>
-                </button>
+                <LogoutButton />
             </div>
+
         </aside>
     );
 }
