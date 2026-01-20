@@ -11,6 +11,7 @@ export default function UserDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  
   const { id } = use(params);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
