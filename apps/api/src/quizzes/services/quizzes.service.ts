@@ -28,8 +28,21 @@ export class QuizzesService {
   }
 
   async findOne(id: string): Promise<QuizDocument> {
-    const quiz = await this.quizModel.findById(id).exec();
+    const quiz = await this.quizModel
+      .findById(id)
+      .populate({
+        path: 'moduleId',
+        select: '_id title courseId',
+        populate: {
+          path: 'courseId',
+          select: '_id title'
+        }
+      }
+      ).
+      exec();
     if (!quiz) throw new NotFoundException(`Quiz with ID ${id} not found`);
+    console.log(quiz);
+    
     return quiz;
   }
 

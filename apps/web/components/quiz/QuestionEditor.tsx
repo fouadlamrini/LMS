@@ -109,7 +109,7 @@ export default function QuestionEditor({ question, onSave, onChange }: QuestionE
                     <label className="block text-sm font-medium text-foreground mb-2">Points</label>
                     <input
                         type="number"
-                        min={1}
+                        min={0}
                         value={localQuestion.score}
                         onChange={(e) => handleUpdate({ score: parseInt(e.target.value) || 1 })}
                         className={`w-full px-4 py-2 border rounded-lg bg-background focus:ring-2 outline-none ${fieldErrors.score ? 'border-error ring-error/10' : 'border-border focus:ring-primary'}`}
@@ -132,7 +132,7 @@ export default function QuestionEditor({ question, onSave, onChange }: QuestionE
                         </div>
                         <div className="space-y-3">
                             {localQuestion.options?.map((opt, idx) => (
-                                <div key={opt._id} className="group">
+                                <div key={opt._id ?? `temp-${idx}`} className="group">
                                     <div className="flex items-center gap-3">
                                         <input
                                             type={localQuestion.type === QuestionType.MULTIPLE_CHOICE ? "radio" : "checkbox"}

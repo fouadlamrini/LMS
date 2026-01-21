@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Trash2, GripVertical, Eye, SquarePen } from 'lucide-react';
 import QuestionEditor from '@/components/quiz/QuestionEditor';
 import QuizPreview from '@/components/quiz/QuizPreview';
@@ -8,12 +8,16 @@ import { Quiz, Question } from '@/types';
 import { QuestionType } from '@/types/enums';
 import axios from '@/lib/axios';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function QuizBuilder() {
     const { id: quizId } = useParams();
     const [quiz, setQuiz] = useState<Quiz | null>(null);
     const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
     const [showPreview, setShowPreview] = useState<boolean>(false);
+    const [passingScore, setPassingScore] = useState<number>(0);
+    const [isUpdating, setIsUpdating] = useState<boolean>(false);
+
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -26,6 +30,20 @@ export default function QuizBuilder() {
         };
         if (quizId) fetchQuiz();
     }, [quizId]);
+
+    useEffect(() => {
+        if (quiz) {
+            setPassingScore(quiz.passingScore);
+        }
+    }, [quiz]);
+
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            updatePassingScore();
+        }, 500);
+
+        return () => clearTimeout(delayDebounce);
+    }, [passingScore])
 
     const persistQuestionUpdate = async (index: number, updates: Partial<Question>) => {
         if (!quiz) return;
@@ -42,13 +60,7 @@ export default function QuizBuilder() {
                 res = await axios.patch(`/quizzes/${quizId}/questions/${targetQuestion._id}`, updates);
             }
 
-            // Update the specific question in state with the real DB object (gets rid of temp-id)
-            setQuiz(prev => {
-                if (!prev) return null;
-                const newQuestions = [...prev.questions];
-                newQuestions[index] = res.data;
-                return { ...prev, questions: newQuestions };
-            });
+            setQuiz(res.data);
         } catch (error) {
             console.error("API Operation Failed", error);
             throw error; // Let the Editor handle the error UI
@@ -112,27 +124,126 @@ export default function QuizBuilder() {
         }
     };
 
+    const changeStatus = async (status: string) => {
+        if (!quiz) return;
+        setIsUpdating(true);
+        try {
+            const res = await axios.patch(`/quizzes/${quiz._id}/status`, { status });
+            setQuiz(res.data);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const updatePassingScore = async () => {
+        if (!quiz) return;
+        setIsUpdating(true);
+        try {
+            const res = await axios.patch(`/quizzes/${quiz._id}`, {
+                passingScore,
+            });
+            setQuiz(res.data);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const fetchDefaultPassingScore = async () => {
+        const res = await axios.get(`/quizzes/${quizId}/default-passing-score`);
+        alert(`Default passing score: ${res.data.defaultPassingScore}`);
+    };
+
+
     if (!quiz) return <div className="p-10 text-center text-muted">Loading quiz...</div>;
 
     return (
         <div className="min-h-screen bg-background p-6">
             <div className="max-w-7xl mx-auto">
-                <div className="mb-8 flex justify-between items-center">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-8">
+                {/* ----------------------------------------------------------------- */}
+                <div className="mb-8 space-y-6">
+                    {/* Header + Actions */}
+                    <div className="flex items-center justify-between">
+                        {/* Title */}
                         <div>
                             <h1 className="text-3xl font-bold text-foreground">Quiz Builder</h1>
-                            <p className="text-muted mt-1">Status: <span className="capitalize font-medium">{quiz.status}</span></p>
+                            <div>
+                                {/* course and module titel as links */}
+                                <div className="text-sm text-muted">
+                                    <Link
+                                        href={'/'}
+                                        className="hover:underline">{quiz.moduleId.courseId.title}</Link> &gt;{' '}
+                                    <Link
+                                        href={'/'}
+                                        className="hover:underline">{quiz.moduleId.title}</Link>
+                                </div>
+                            </div>
+                            <p className="text-muted mt-1">
+                                Status:{' '}
+                                <span className="capitalize font-medium">
+                                    {quiz.status}
+                                </span>
+                            </p>
                         </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-surface">
-                                {showPreview ? <><SquarePen className="w-4 h-4" /> Edit</> : <><Eye className="w-4 h-4" /> Preview</>}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowPreview(!showPreview)}
+                                className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-surface">
+                                {showPreview ? (
+                                    <>
+                                        <SquarePen className="w-4 h-4" />
+                                        Edit
+                                    </>
+                                ) : (
+                                    <>
+                                        <Eye className="w-4 h-4" />
+                                        Preview
+                                    </>
+                                )}
                             </button>
 
+                            {/* make status change select */}
+                            <div>
+                                <select
+                                    value={quiz.status}
+                                    onChange={(e) => changeStatus(e.target.value)}
+                                    disabled={isUpdating}
+                                    className="px-4 py-2 border rounded-lg bg-background">
+
+                                    <option value="draft">Draft</option>
+                                    <option value="published">Published</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {/* Passing Score Card */}
+                    <div className="flex items-center justify-between bg-surface border border-border rounded-lg p-4">
+                        <div>
+                            <p className="text-sm font-medium text-foreground">
+                                Passing score
+                            </p>
+                            <p className="text-xs text-muted">
+                                Minimum score required to pass this quiz
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="number"
+                                min={0}
+                                value={passingScore}
+                                onChange={(e) => setPassingScore(Number(e.target.value))}
+                                className="w-24 px-3 py-2 border rounded-lg bg-background text-center"
+                            />
+
                             <button
-                                // onClick={publishQuiz} 
-                                className="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-secondary-hover transition-all">
-                                Publish Quiz
+                                onClick={fetchDefaultPassingScore}
+                                className="px-4 py-2 text-sm text-secondary hover:underline">
+                                Default
                             </button>
                         </div>
                     </div>
@@ -163,8 +274,7 @@ export default function QuizBuilder() {
                                     <div
                                         key={q._id}
                                         onClick={() => setSelectedQuestion(i)}
-                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedQuestion === i ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
-                                    >
+                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedQuestion === i ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
                                         <div className="flex items-start gap-3">
                                             <GripVertical className="w-4 h-4 text-muted mt-1 shrink-0" />
                                             <div className="flex-1 min-w-0">
