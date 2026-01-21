@@ -196,7 +196,7 @@ export default function UsersPage() {
               <th className="px-6 py-4 font-bold">Full Name</th>
               <th className="px-6 py-4 font-bold">Email</th>
               <th className="px-6 py-4 font-bold">Role</th>
-              <th className="px-6 py-4 font-bold">Student No.</th>
+              <th className="px-6 py-4 font-bold">Student Number</th>
               <th className="px-6 py-4 font-bold text-right">Action</th>
             </tr>
           </thead>
