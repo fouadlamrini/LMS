@@ -98,7 +98,7 @@ export default function UserDetailPage({
             <label className="block text-sm font-medium text-gray-700">
               Student Number
             </label>
-            <p className="mt-1 text-lg">{user.studentNumber || "N/A"}</p>
+            <p className="mt-1 text-lg">{user.studentNumber || "-"}</p>
           </div>
 
           {user.birthDate && (
