@@ -14,7 +14,7 @@ import { QuestionType } from 'src/enums/quiz.enum';
 
 @Injectable()
 export class QuestionsService {
-  constructor(private readonly quizzesService: QuizzesService) {}
+  constructor(private readonly quizzesService: QuizzesService) { }
 
   private validateQuestion(dto: CreateQuestionDto | UpdateQuestionDto) {
     const { type, options, correctAnswerText, correctAnswerBoolean } = dto;
@@ -63,15 +63,11 @@ export class QuestionsService {
       const correctCount = (options ?? []).filter((o) => o.correct).length;
 
       if (type === QuestionType.MULTIPLE_CHOICE && correctCount !== 1) {
-        throw new BadRequestException(
-          'Multiple choice questions must have exactly one correct option',
-        );
+        throw new BadRequestException('Multiple choice questions must have exactly one correct option');
       }
 
       if (type === QuestionType.MULTIPLE_SELECT && correctCount < 1) {
-        throw new BadRequestException(
-          'Multiple select questions must have at least one correct option',
-        );
+        throw new BadRequestException('Multiple select questions must have at least one correct option');
       }
 
       if (correctAnswerText || correctAnswerBoolean !== undefined) {
@@ -81,7 +77,6 @@ export class QuestionsService {
       }
     }
   }
-
   async addQuestion(quizId: string, dto: CreateQuestionDto) {
     const quiz = await this.quizzesService.findOne(quizId);
 
@@ -92,25 +87,18 @@ export class QuestionsService {
     return quiz.save();
   }
 
-  async updateQuestion(
-    quizId: string,
-    questionId: string,
-    dto: UpdateQuestionDto,
-  ) {
+  async updateQuestion(quizId: string, questionId: string, dto: UpdateQuestionDto) {
     const quiz = await this.quizzesService.findOne(quizId);
-
     const question = quiz.questions.id(questionId);
-    if (!question) {
-      throw new NotFoundException('Question not found');
-    }
+    if (!question) throw new NotFoundException('Question not found');
 
-    this.validateQuestion({
-      ...question.toObject(),
-      ...dto,
-    });
+    // validate merged state
+    this.validateQuestion({ ...question.toObject(), ...dto });
 
-    const { _id, ...safeDto } = dto as any;
-    question.set(safeDto);
+    // apply updates safely
+    question.set(dto);
+
+    // refresh passing score based on new points
     quiz.passingScore = this.quizzesService.getDefaultPassingScore(quiz);
     return quiz.save();
   }
@@ -118,15 +106,11 @@ export class QuestionsService {
   async removeQuestion(quizId: string, questionId: string) {
     const quiz = await this.quizzesService.findOne(quizId);
 
-    const questionIndex = quiz.questions.findIndex(
-      (q) => q._id.toString() === questionId,
-    );
+    const question = quiz.questions.id(questionId);
+    if (!question) throw new NotFoundException('Question not found');
 
-    if (questionIndex === -1) {
-      throw new NotFoundException('Question not found');
-    }
+    question.deleteOne();
 
-    quiz.questions.splice(questionIndex, 1);
     quiz.passingScore = this.quizzesService.getDefaultPassingScore(quiz);
     return quiz.save();
   }
@@ -146,11 +130,11 @@ export class QuestionsService {
       score: question.score,
       options:
         question.type === QuestionType.MULTIPLE_CHOICE ||
-        question.type === QuestionType.MULTIPLE_SELECT
+          question.type === QuestionType.MULTIPLE_SELECT
           ? question.options?.map((o) => ({
-              _id: o._id.toString(),
-              text: o.text,
-            }))
+            _id: o._id.toString(),
+            text: o.text,
+          }))
           : undefined,
     };
 
