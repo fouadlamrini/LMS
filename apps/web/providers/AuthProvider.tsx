@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       navigateByRole(userData.role);
     } catch (error: any) {
       clearAuth();
-      throw new Error(error.response?.data?.message || 'Erreur de connexion');
+      throw new Error(error.response?.data?.message || 'Connection error');
     } finally {
       setIsLoading(false);
     }
