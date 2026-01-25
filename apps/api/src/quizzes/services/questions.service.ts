@@ -92,13 +92,56 @@ export class QuestionsService {
     const question = quiz.questions.id(questionId);
     if (!question) throw new NotFoundException('Question not found');
 
-    // validate merged state
-    this.validateQuestion({ ...question.toObject(), ...dto });
+    // Validate merged state
+    const merged = {
+      type: dto.type ?? question.type,
+      text: dto.text ?? question.text,
+      score: dto.score ?? question.score,
+      options: (dto.options ?? question.options)?.map(o => ({
+        _id: typeof o._id === 'string' ? o._id : o._id?.toString(),
+        text: o.text,
+        correct: o.correct,
+      })),
+      correctAnswerText: dto.correctAnswerText ?? question.correctAnswerText,
+      correctAnswerBoolean: dto.correctAnswerBoolean ?? question.correctAnswerBoolean,
+    };
+    this.validateQuestion(merged as CreateQuestionDto | UpdateQuestionDto);
 
-    // apply updates safely
-    question.set(dto);
+    if (dto.options) {
+      const existingOptions = question.options ?? [];
 
-    // refresh passing score based on new points
+      const incomingIds = dto.options
+        .filter(o => o._id)
+        .map(o => o._id!.toString());
+
+      // Remove deleted options
+      question.options = existingOptions.filter(o =>
+        incomingIds.includes(o._id.toString()),
+      );
+
+      // Update existing & insert new
+      dto.options.forEach(opt => {
+        if (opt._id) {
+          const existing = question.options?.find(o => o._id?.toString() === opt._id?.toString());
+          if (existing) {
+            if (opt.text !== undefined) existing.text = opt.text;
+            if (opt.correct !== undefined) existing.correct = opt.correct;
+          }
+        } else {
+          question.options!.push(opt as any);
+        }
+      });
+    }
+
+    // ===== Update simple fields =====
+    if (dto.text !== undefined) question.text = dto.text;
+    if (dto.type !== undefined) question.type = dto.type;
+    if (dto.score !== undefined) question.score = dto.score;
+    if (dto.correctAnswerBoolean !== undefined)
+      question.correctAnswerBoolean = dto.correctAnswerBoolean;
+    if (dto.correctAnswerText !== undefined)
+      question.correctAnswerText = dto.correctAnswerText;
+
     quiz.passingScore = this.quizzesService.getDefaultPassingScore(quiz);
     return quiz.save();
   }

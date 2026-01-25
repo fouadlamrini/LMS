@@ -18,12 +18,19 @@ export interface Question {
 
 export interface Quiz {
     _id: string;
-    moduleId: string;
+    moduleId: {
+        _id: string;
+        title?: string;
+        courseId: {
+            _id?: string;
+            title?: string;
+        };
+    };
     questions: Question[];
     passingScore: number;
     status: QuizStatus;
     createdAt?: string;
-    updatedAt?: string;
+    updatedAt: string;
 }
 
 export interface Answer {

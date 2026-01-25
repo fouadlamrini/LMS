@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Plus, Trash2, GripVertical, Eye, SquarePen } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Plus, Trash2, GripVertical, Eye, SquarePen, Save, AlertCircle, CheckCircle2, Clock, CircleQuestionMark } from 'lucide-react';
 import QuestionEditor from '@/components/quiz/QuestionEditor';
 import QuizPreview from '@/components/quiz/QuizPreview';
 import { Quiz, Question } from '@/types';
@@ -9,6 +9,14 @@ import { QuestionType } from '@/types/enums';
 import axios from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+const QuestionTypeLabels = {
+    [QuestionType.MULTIPLE_CHOICE]: 'Multiple Choice',
+    [QuestionType.MULTIPLE_SELECT]: 'Multiple Select',
+    [QuestionType.TRUE_FALSE]: 'True/False',
+    [QuestionType.SHORT_ANSWER]: 'Short Answer'
+};
 
 export default function QuizBuilder() {
     const { id: quizId } = useParams();
@@ -17,7 +25,13 @@ export default function QuizBuilder() {
     const [showPreview, setShowPreview] = useState<boolean>(false);
     const [passingScore, setPassingScore] = useState<number>(0);
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
+    const [dirtyIndices, setDirtyIndices] = useState<Set<number>>(new Set());
 
+    const hasUnsavedChanges = useCallback(() => {
+        const hasTemp = quiz?.questions.some(q => q._id?.startsWith('temp-'));
+        const hasDirty = dirtyIndices.size > 0;
+        return hasTemp || hasDirty;
+    }, [quiz?.questions, dirtyIndices]);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -43,7 +57,7 @@ export default function QuizBuilder() {
         }, 500);
 
         return () => clearTimeout(delayDebounce);
-    }, [passingScore])
+    }, [passingScore]);
 
     const persistQuestionUpdate = async (index: number, updates: Partial<Question>) => {
         if (!quiz) return;
@@ -53,21 +67,29 @@ export default function QuizBuilder() {
         try {
             let res;
             if (isNew) {
-                // If it's a temp ID, we POST to create
                 res = await axios.post(`/quizzes/${quizId}/questions`, updates);
             } else {
-                // If it exists, we PATCH
                 res = await axios.patch(`/quizzes/${quizId}/questions/${targetQuestion._id}`, updates);
             }
-
             setQuiz(res.data);
+
+            // REMOVE from dirty list after successful save
+            setDirtyIndices(prev => {
+                const next = new Set(prev);
+                next.delete(index);
+                return next;
+            });
         } catch (error) {
             console.error("API Operation Failed", error);
-            throw error; // Let the Editor handle the error UI
+            throw error;
         }
     };
 
     const handleLocalUpdate = (index: number, updates: Partial<Question>) => {
+        if (quiz && !quiz.questions[index]._id?.startsWith('temp-')) {
+            setDirtyIndices(prev => new Set(prev).add(index));
+        }
+
         setQuiz(prev => {
             if (!prev) return null;
             const newQuestions = [...prev.questions];
@@ -82,7 +104,6 @@ export default function QuizBuilder() {
         const lastIndex = quiz.questions.length - 1;
         const lastQuestion = quiz.questions[lastIndex];
 
-        // If the last question is empty and unsaved, just change its type instead of adding new
         if (lastQuestion && !lastQuestion.text.trim() && lastQuestion._id?.startsWith('temp-')) {
             handleLocalUpdate(lastIndex, { type });
             setSelectedQuestion(lastIndex);
@@ -139,9 +160,7 @@ export default function QuizBuilder() {
         if (!quiz) return;
         setIsUpdating(true);
         try {
-            const res = await axios.patch(`/quizzes/${quiz._id}`, {
-                passingScore,
-            });
+            const res = await axios.patch(`/quizzes/${quiz._id}`, { passingScore });
             setQuiz(res.data);
         } finally {
             setIsUpdating(false);
@@ -149,51 +168,105 @@ export default function QuizBuilder() {
     };
 
     const fetchDefaultPassingScore = async () => {
-        const res = await axios.get(`/quizzes/${quizId}/default-passing-score`);
-        alert(`Default passing score: ${res.data.defaultPassingScore}`);
+        try {
+            const res = await axios.get(`/quizzes/${quizId}/default-passing-score`);
+            setPassingScore(res.data.defaultPassingScore);
+        } catch (error) {
+            console.error("Failed to fetch default passing score:", error);
+        }
     };
 
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges()) {
+                e.preventDefault();
+                e.returnValue = ''; // Standard way to trigger browser confirmation
+            }
+        };
 
-    if (!quiz) return <div className="p-10 text-center text-muted">Loading quiz...</div>;
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
+
+    const handleSafeNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (hasUnsavedChanges()) {
+            const confirmExit = window.confirm(
+                "You have unsaved questions. Are you sure you want to leave without saving?"
+            );
+            if (!confirmExit) {
+                e.preventDefault();
+                return;
+            }
+        }
+    };
+
+    if (!quiz) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-muted">Loading quiz...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const totalScore = quiz.questions.reduce((sum, q) => sum + (q.score || 0), 0);
 
     return (
-        <div className="min-h-screen bg-background p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* ----------------------------------------------------------------- */}
-                <div className="mb-8 space-y-6">
-                    {/* Header + Actions */}
-                    <div className="flex items-center justify-between">
-                        {/* Title */}
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">Quiz Builder</h1>
-                            <div>
-                                {/* course and module titel as links */}
-                                <div className="text-sm text-muted">
-                                    <Link
-                                        href={'/'}
-                                        className="hover:underline">{quiz.moduleId.courseId.title}</Link> &gt;{' '}
-                                    <Link
-                                        href={'/'}
-                                        className="hover:underline">{quiz.moduleId.title}</Link>
+        <div className="min-h-screen bg-background max-w-6xl">
+            {/* Header */}
+            <div className="bg-surface border-b border-border sticky top-0 z-10 shadow-sm">
+                <div className="mx-auto px-6 py-4">
+                    <div className="flex items-start justify-between gap-6">
+                        {/* Left: Breadcrumb & Title */}
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 text-xs text-muted mb-2">
+                                <Link
+                                    href={`/trainer/courses/${quiz.moduleId.courseId._id}`}
+                                    onClick={(e) => handleSafeNavigation(e, `/trainer/courses/${quiz.moduleId.courseId._id}`)}
+                                    className="hover:text-secondary transition-colors">
+                                    {quiz.moduleId.courseId.title}
+                                </Link>
+                                <span>/</span>
+                                <Link
+                                    href={`/trainer/courses/${quiz.moduleId.courseId._id}/modules/${quiz.moduleId._id}`}
+                                    onClick={(e) => handleSafeNavigation(e, `/trainer/courses/${quiz.moduleId.courseId._id}/modules/${quiz.moduleId._id}`)}
+                                    className="hover:text-secondary transition-colors">
+                                    {quiz.moduleId.title}
+                                </Link>
+                            </div>
+                            <h1 className="text-2xl font-bold text-foreground mb-1">Quiz Builder</h1>
+                            <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-muted">Status:</span>
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${quiz.status === 'published' ? 'bg-success/10 text-success' :
+                                        quiz.status === 'draft' ? 'bg-warning/10 text-warning' :
+                                            'bg-muted/10 text-muted'
+                                        }`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${quiz.status === 'published' ? 'bg-success' :
+                                            quiz.status === 'draft' ? 'bg-warning' :
+                                                'bg-muted'
+                                            }`}></span>
+                                        {quiz.status.charAt(0).toUpperCase() + quiz.status.slice(1)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-muted">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    Updated: {new Date(quiz.updatedAt).toLocaleDateString()}
                                 </div>
                             </div>
-                            <p className="text-muted mt-1">
-                                Status:{' '}
-                                <span className="capitalize font-medium">
-                                    {quiz.status}
-                                </span>
-                            </p>
                         </div>
 
-                        {/* Actions */}
+                        {/* Right: Actions */}
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setShowPreview(!showPreview)}
-                                className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-surface">
+                                className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-surface hover:border-secondary/30 transition-all text-sm font-medium">
                                 {showPreview ? (
                                     <>
                                         <SquarePen className="w-4 h-4" />
-                                        Edit
+                                        Edit Mode
                                     </>
                                 ) : (
                                     <>
@@ -203,97 +276,184 @@ export default function QuizBuilder() {
                                 )}
                             </button>
 
-                            {/* make status change select */}
-                            <div>
-                                <select
-                                    value={quiz.status}
-                                    onChange={(e) => changeStatus(e.target.value)}
-                                    disabled={isUpdating}
-                                    className="px-4 py-2 border rounded-lg bg-background">
+                            <select
+                                value={quiz.status}
+                                onChange={(e) => changeStatus(e.target.value)}
+                                disabled={isUpdating}
+                                className="px-4 py-2 border border-border rounded-lg bg-surface hover:border-secondary/30 transition-all text-sm font-medium cursor-pointer disabled:opacity-50">
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Published</option>
-                                    <option value="archived">Archived</option>
-                                </select>
+            {/* Main Content */}
+            <div className="mx-auto mt-6">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-surface border border-border rounded-xl p-4 hover:border-secondary/30 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs text-muted font-medium mb-1">Total Questions</p>
+                                <p className="text-2xl font-bold text-foreground">{quiz.questions.length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                                <CircleQuestionMark className="w-6 h-6 text-secondary" />
                             </div>
                         </div>
                     </div>
 
-
-                    {/* Passing Score Card */}
-                    <div className="flex items-center justify-between bg-surface border border-border rounded-lg p-4">
-                        <div>
-                            <p className="text-sm font-medium text-foreground">
-                                Passing score
-                            </p>
-                            <p className="text-xs text-muted">
-                                Minimum score required to pass this quiz
-                            </p>
+                    <div className="bg-surface border border-border rounded-xl p-4 hover:border-secondary/30 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs text-muted font-medium mb-1">Total Points</p>
+                                <p className="text-2xl font-bold text-foreground">{totalScore}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                                <CheckCircle2 className="w-6 h-6 text-secondary" />
+                            </div>
                         </div>
+                    </div>
 
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="number"
-                                min={0}
-                                value={passingScore}
-                                onChange={(e) => setPassingScore(Number(e.target.value))}
-                                className="w-24 px-3 py-2 border rounded-lg bg-background text-center"
-                            />
-
-                            <button
-                                onClick={fetchDefaultPassingScore}
-                                className="px-4 py-2 text-sm text-secondary hover:underline">
-                                Default
-                            </button>
+                    <div className="bg-surface border border-border rounded-xl p-4 hover:border-secondary/30 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="text-xs text-muted font-medium mb-2">Passing Score</p>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={totalScore}
+                                        value={passingScore}
+                                        onChange={(e) => setPassingScore(Number(e.target.value))}
+                                        className="w-20 px-3 py-1.5 border border-border rounded-lg bg-background text-foreground text-lg font-bold text-center focus:outline-none focus:border-secondary transition-all"
+                                    />
+                                    <span className="text-muted text-sm">/ {totalScore}</span>
+                                    <button
+                                        onClick={fetchDefaultPassingScore}
+                                        className="ml-2 text-xs text-secondary hover:text-secondary-hover font-medium">
+                                        Default
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                                <span className="text-success text-lg font-bold">
+                                    {totalScore > 0 ? Math.round((passingScore / totalScore) * 100) : 0}%
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {showPreview ? <QuizPreview quiz={quiz} /> : (
+                {showPreview ? (
+                    <QuizPreview quiz={quiz} />
+                ) : (
                     <div className="grid grid-cols-12 gap-6">
-                        {/* Sidebar */}
-                        <div className="col-span-4 bg-surface border border-border rounded-lg p-4 overflow-y-auto max-h-[80vh]">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-semibold text-foreground">Questions ({quiz.questions.length})</h2>
-                                <div className="relative group">
-                                    <button className="p-2 bg-primary text-white rounded-lg hover:bg-primary-hover">
-                                        <Plus className="w-4 h-4" />
-                                    </button>
-                                    <div className="absolute right-0 mt-2 w-48 bg-surface border border-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-                                        {Object.values(QuestionType).map((type) => (
-                                            <button key={type} onClick={() => addQuestion(type)} className="w-full px-4 py-2 text-left text-sm hover:bg-primary/10 first:rounded-t-lg last:rounded-b-lg">
-                                                {type.replace('_', ' ')}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                {quiz.questions.map((q, i) => (
-                                    <div
-                                        key={q._id}
-                                        onClick={() => setSelectedQuestion(i)}
-                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedQuestion === i ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
-                                        <div className="flex items-start gap-3">
-                                            <GripVertical className="w-4 h-4 text-muted mt-1 shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-medium text-secondary">Q{i + 1}</span>
-                                                    {q._id?.startsWith('temp-') && (
-                                                        <span className="text-[9px] bg-amber-100 text-amber-700 px-1 rounded uppercase font-bold border border-amber-200">Unsaved</span>
-                                                    )}
-                                                </div>
-                                                <p className="text-sm text-foreground truncate">
-                                                    {q.text || <span className="italic text-muted/40">New {q.type.toLowerCase().replace('_', ' ')}...</span>}
-                                                </p>
-                                            </div>
-                                            <button onClick={(e) => { e.stopPropagation(); deleteQuestion(i); }} className="p-1 text-error hover:bg-error/10 rounded">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                        {/* Enhanced Sidebar */}
+                        <div className="col-span-4">
+                            <div className="bg-surface border border-border rounded-xl overflow-hidden sticky top-24">
+                                {/* Sidebar Header */}
+                                <div className="flex items-center justify-between p-4 border-b border-border bg-liner-to-r from-primary/5 to-secondary/5">
+                                    <h2 className="font-semibold text-foreground flex items-center gap-2">
+                                        Questions
+                                        <span className="text-xs bg-primary/10 text-muted px-2 py-0.5 rounded-full font-bold">
+                                            {quiz.questions.length}
+                                        </span>
+                                    </h2>
+                                    <div className="relative group">
+                                        <button className="p-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all shadow-sm hover:shadow-md">
+                                            <Plus className="w-4 h-4" />
+                                        </button>
+                                        <div className="absolute right-0 mt-2 w-56 bg-surface border border-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 overflow-hidden">
+                                            {Object.entries(QuestionTypeLabels).map(([type, label]) => (
+                                                <button
+                                                    key={type}
+                                                    onClick={() => addQuestion(type as QuestionType)}
+                                                    className="w-full px-4 py-3 text-left text-sm hover:bg-primary/5 transition-all flex items-center justify-between group/item">
+                                                    <span className="text-foreground font-medium">{label}</span>
+                                                    <span className="text-xs text-muted group-hover/item:text-secondary">+</span>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
-                                ))}
+                                </div>
+
+                                {/* Question List */}
+                                <div className="p-3 space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto">
+                                    {quiz.questions.map((q, i) => {
+                                        const isSelected = selectedQuestion === i;
+                                        const isUnsaved = q._id?.startsWith('temp-');
+                                        const isEmpty = !q.text.trim();
+                                        const isNew = isUnsaved;
+                                        const isModified = dirtyIndices.has(i);
+
+                                        return (
+                                            <div
+                                                key={q._id}
+                                                onClick={() => setSelectedQuestion(i)}
+                                                className={`group relative p-3 border rounded-lg cursor-pointer transition-all ${isSelected
+                                                    ? 'border-primary bg-liner-to-r from-primary/10 to-secondary/5 shadow-sm'
+                                                    : 'border-border hover:border-secondary/30 hover:shadow-sm bg-surface'
+                                                    }`}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`mt-0.5 shrink-0 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                                                        <GripVertical className="w-4 h-4 text-muted" />
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${isSelected ? 'bg-primary text-white' : 'bg-muted/10 text-muted'
+                                                                }`}>
+                                                                Q{i + 1}
+                                                            </span>
+
+                                                            <span className="text-[10px] text-muted uppercase tracking-wide">
+                                                                {QuestionTypeLabels[q.type] || q.type}
+                                                            </span>
+
+                                                            {isNew ? (
+                                                                <span className="text-[9px] bg-warning/20 text-warning px-1.5 py-0.5 rounded uppercase font-bold border border-warning/30">
+                                                                    New
+                                                                </span>
+                                                            ) : isModified ? (
+                                                                <span className="text-[9px] bg-secondary/20 text-secondary px-1.5 py-0.5 rounded uppercase font-bold border border-secondary/30">
+                                                                    Modified
+                                                                </span>
+                                                            ) : null}
+
+                                                            <span className="ml-auto text-xs font-semibold text-secondary">
+                                                                {q.score}pt
+                                                            </span>
+                                                        </div>
+
+                                                        <p className={`text-sm leading-snug ${isEmpty
+                                                            ? 'text-muted/40 italic'
+                                                            : 'text-foreground'
+                                                            } line-clamp-2`}>
+                                                            {q.text || `New ${QuestionTypeLabels[q.type] || q.type}...`}
+                                                        </p>
+
+                                                        {isEmpty && isUnsaved && (
+                                                            <div className="flex items-center gap-1 mt-2 text-warning">
+                                                                <AlertCircle className="w-3 h-3" />
+                                                                <span className="text-[10px] font-medium">Question text required</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); deleteQuestion(i); }}
+                                                        className="shrink-0 p-1.5 text-error/60 hover:text-error hover:bg-error/10 rounded transition-all opacity-0 group-hover:opacity-100">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 
@@ -305,10 +465,16 @@ export default function QuizBuilder() {
                                     question={quiz.questions[selectedQuestion]}
                                     onSave={(updates) => persistQuestionUpdate(selectedQuestion, updates)}
                                     onChange={(updates) => handleLocalUpdate(selectedQuestion, updates)}
+                                    isDirty={dirtyIndices.has(selectedQuestion ?? -1)}
+                                    isNew={quiz.questions[selectedQuestion]._id?.startsWith('temp-') ?? false}
                                 />
                             ) : (
-                                <div className="bg-surface border border-dashed border-border rounded-lg p-20 text-center">
-                                    <p className="text-muted">Select a question or click "+" to begin.</p>
+                                <div className="bg-surface border-2 border-dashed border-border rounded-xl p-20 text-center">
+                                    <div className="text-muted/40">
+                                        <SquarePen className="w-16 h-16 mx-auto mb-4" />
+                                        <p className="text-lg font-medium mb-2">No Question Selected</p>
+                                        <p className="text-sm">Select a question from the sidebar or create a new one to begin editing</p>
+                                    </div>
                                 </div>
                             )}
                         </div>
