@@ -20,7 +20,21 @@ import { TrainerService } from './trainer.service';
 export class TrainerController {
   constructor(private readonly trainerService: TrainerService) {}
 
-  @Get('courses/:courseId/learners')
+@Get('courses')
+async getMyCourses(@Req() req: AuthenticatedRequest) {
+  // console.log("REQ.USER:", req.user);
+  const trainerId = req.user.userId;
+  // console.log("TRAINER ID:", trainerId);
+
+  return this.trainerService.getMyCourses(trainerId);
+}
+
+
+
+
+
+
+  @Get('courses/:courseId/enrollments')
   async getEnrolledLearners(
     @Param('courseId') courseId: string,
     @Req() req: AuthenticatedRequest,
@@ -37,6 +51,7 @@ export class TrainerController {
     @Param('learnerId') learnerId: string,
     @Req() req: AuthenticatedRequest,
   ) {
+    console.log("Fetching report for courseId:", courseId, "learnerId:", learnerId);
     return this.trainerService.getLearnerReport(
       req.user.userId,
       courseId,

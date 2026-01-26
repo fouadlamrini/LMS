@@ -42,7 +42,7 @@ export class CoursesController {
   @Get()
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findAll(@Request() req: any) {
-    return this.coursesService.findAll(req.user.userId, req.user.role);
+    return this.coursesService.findAll(req.user.sub, req.user.role);
   }
 
   @Get(':id')

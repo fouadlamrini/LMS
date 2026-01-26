@@ -13,6 +13,7 @@ import type { RequestWithUser } from '../auth/request-with-user.interface';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -39,6 +40,21 @@ export class UsersController {
     @Body() dto: UpdateProfileDto,
   ) {
     return await this.usersService.updateProfile(req.user.userId, dto);
+  }
+
+  // Update password of logged-in user
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/password')
+  async updateMyPassword(
+    @Req() req: RequestWithUser,
+    @Body() dto: UpdatePasswordDto,
+  ) {
+    await this.usersService.updatePassword(
+      req.user.userId,
+      dto.oldPassword,
+      dto.newPassword,
+    );
+    return { message: 'Password updated successfully' };
   }
 
   // ================= ADMIN ROUTES =================

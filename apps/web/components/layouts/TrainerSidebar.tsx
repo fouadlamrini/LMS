@@ -12,9 +12,9 @@ export default function TrainerSidebar({ user }: { user: User }) {
     const links = [
         { href: '/trainer/dashboard', label: 'Dashboard', icon: Home },
         { href: '/trainer/courses', label: 'My Courses', icon: BookOpen },
-        { href: '/trainer/students', label: 'Students', icon: Users },
-        { href: '/trainer/analytics', label: 'Analytics', icon: BarChart3 },
-        { href: '/trainer/settings', label: 'Settings', icon: Settings },
+        // { href: '/students', label: 'Students', icon: Users },
+        // { href: '/trainer/rapport', label: 'Rapport', icon: BarChart3 },
+        // { href: '/trainer/settings', label: 'Settings', icon: Settings },
     ];
 
     return (
