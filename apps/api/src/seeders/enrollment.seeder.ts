@@ -19,7 +19,7 @@ export class EnrollmentSeeder {
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
-  ) {}
+  ) { }
 
   async seed() {
     const enrollmentCount = await this.enrollmentModel.countDocuments();
@@ -85,24 +85,30 @@ export class EnrollmentSeeder {
           }
         }
 
+        const moduleProgress = [
+          {
+            moduleId: modules[0]._id,
+            completed: true,
+            quizAttemptIds,
+          },
+        ];
+
+        if (modules[1]) {
+          moduleProgress.push({
+            moduleId: modules[1]._id,
+            completed: false,
+            quizAttemptIds: [],
+          });
+        }
+
         await this.enrollmentModel.create({
           courseId: webDevCourse._id,
           learnerId: learners[0]._id,
-          moduleProgress: [
-            {
-              moduleId: modules[0]._id,
-              completed: true,
-              quizAttemptIds,
-            },
-            {
-              moduleId: modules[1]._id,
-              completed: false,
-              quizAttemptIds: [],
-            },
-          ],
+          moduleProgress,
           overallProgress: 50,
           status: 'active',
         });
+
       }
     }
 
@@ -111,6 +117,7 @@ export class EnrollmentSeeder {
       courseId: courses[0]._id,
       learnerId: learners[1]._id,
       overallProgress: 0,
+      moduleProgress: [],
       status: 'active',
     });
 
@@ -132,6 +139,7 @@ export class EnrollmentSeeder {
         courseId: dataScienceCourse._id,
         learnerId: learners[2]._id,
         overallProgress: 0,
+        moduleProgress: [],
         status: 'dropped',
       });
     }

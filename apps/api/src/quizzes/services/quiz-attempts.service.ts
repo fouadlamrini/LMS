@@ -35,7 +35,7 @@ export class QuizAttemptsService {
     @InjectModel(CourseModule.name)
     private courseModuleModel: Model<CourseModuleDocument>,
     private readonly quizzesService: QuizzesService,
-  ) {}
+  ) { }
 
   /* ================= START ATTEMPT ================= */
   async startAttempt(quizId: string, learnerId: string) {
@@ -46,48 +46,35 @@ export class QuizAttemptsService {
 
     const courseId = await this.getCourseIdFromQuiz(quiz);
 
-    // Check enrollment
     const enrollment = await this.enrollmentModel.findOne({
       learnerId: new Types.ObjectId(learnerId),
       courseId: new Types.ObjectId(courseId),
     });
     if (!enrollment) throw new NotFoundException('Enrollment not found');
 
-    // Check if an active (not completed) attempt already exists
-    const existingAttempt = await this.quizAttemptModel.findOne({
-      quizId: quiz._id,
-      _id: {
-        $in: enrollment.moduleProgress.flatMap((mp) => mp.quizAttemptIds),
-      },
-      completed: false,
-    });
-
-    if (existingAttempt) return existingAttempt; // return instead of creating new
-
-    // Create new attempt
-    const attempt = await this.quizAttemptModel.create({
+    const attempt = new this.quizAttemptModel({
       quizId: quiz._id,
       answers: [],
-      score: 0,
-      passed: false,
-      completed: false,
     });
+    await attempt.save();
 
-    // Update module progress
-    let moduleProgress = enrollment.moduleProgress.find(
-      (mp) => mp.moduleId.toString() === quiz.moduleId.toString(),
+    let moduleProgress = enrollment.moduleProgress.find((mp) =>
+      mp.moduleId.toString() === quiz.moduleId._id.toString(),
     );
+
     if (!moduleProgress) {
-      moduleProgress = {
+      // Only push if it truly doesn't exist
+      enrollment.moduleProgress.push({
         moduleId: quiz.moduleId,
         completed: false,
-        quizAttemptIds: [],
-      };
-      enrollment.moduleProgress.push(moduleProgress);
+        quizAttemptIds: [attempt._id as Types.ObjectId],
+      });
+    } else {
+      // If it exists, just add the new attempt ID
+      moduleProgress.quizAttemptIds.push(attempt._id as Types.ObjectId);
     }
-    moduleProgress.quizAttemptIds.push(attempt._id);
-    await enrollment.save();
 
+    await enrollment.save();
     return attempt;
   }
 
@@ -107,11 +94,12 @@ export class QuizAttemptsService {
 
     const courseId = await this.getCourseIdFromQuiz(quiz);
 
-    const enrollment = await this.enrollmentModel.findOne({
-      learnerId: new Types.ObjectId(learnerId),
-      courseId: new Types.ObjectId(courseId),
-      'moduleProgress.quizAttemptIds': attempt._id,
-    });
+    const enrollment = await this.enrollmentModel
+      .findOne({
+        learnerId: new Types.ObjectId(learnerId),
+        courseId: new Types.ObjectId(courseId),
+        'moduleProgress.quizAttemptIds': new Types.ObjectId(attempt._id), // ensures the learner owns this attempt
+      })
 
     if (!enrollment)
       throw new ForbiddenException('You do not own this attempt');
@@ -238,7 +226,7 @@ export class QuizAttemptsService {
             answer.textAnswer &&
             question.correctAnswerText &&
             answer.textAnswer.trim().toLowerCase() ===
-              question.correctAnswerText.trim().toLowerCase()
+            question.correctAnswerText.trim().toLowerCase()
           )
             score += question.score;
           break;
@@ -269,7 +257,7 @@ export class QuizAttemptsService {
       enrollment.overallProgress = Math.round(
         (enrollment.moduleProgress.filter((mp) => mp.completed).length /
           enrollment.moduleProgress.length) *
-          100,
+        100,
       );
 
       await enrollment.save();

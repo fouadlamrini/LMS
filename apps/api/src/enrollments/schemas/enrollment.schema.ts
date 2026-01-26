@@ -18,6 +18,7 @@ export class ResumeState {
 // Embedded document for module progress
 @Schema({ _id: false })
 export class ModuleProgress {
+  // Unique per enrollment handled via array validator below
   @Prop({ type: Types.ObjectId, ref: 'CourseModule', required: true })
   moduleId!: Types.ObjectId;
 
@@ -26,6 +27,7 @@ export class ModuleProgress {
 
   @Prop({ type: [Types.ObjectId], ref: 'QuizAttempt', default: [] })
   quizAttemptIds!: Types.ObjectId[];
+
   @Prop({ type: ResumeState, default: null })
   resume?: ResumeState;
 }
@@ -43,7 +45,19 @@ export class Enrollment {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   learnerId!: Types.ObjectId;
 
-  @Prop({ type: [ModuleProgressSchema], default: [] })
+  @Prop({
+    type: [ModuleProgressSchema],
+    default: [],
+    validate: {
+      validator: (value: ModuleProgress[]) => {
+        const ids = value
+          .map((mp) => mp.moduleId?.toString())
+          .filter(Boolean);
+        return ids.length === new Set(ids).size;
+      },
+      message: 'moduleProgress.moduleId must be unique within an enrollment',
+    },
+  })
   moduleProgress!: ModuleProgress[];
 
   @Prop({ default: 0 })

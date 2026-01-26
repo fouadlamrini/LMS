@@ -41,7 +41,6 @@ export class QuizzesService {
       ).
       exec();
     if (!quiz) throw new NotFoundException(`Quiz with ID ${id} not found`);
-    console.log(quiz);
     
     return quiz;
   }
