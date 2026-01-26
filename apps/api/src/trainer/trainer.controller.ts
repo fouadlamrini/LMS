@@ -20,6 +20,20 @@ import { TrainerService } from './trainer.service';
 export class TrainerController {
   constructor(private readonly trainerService: TrainerService) {}
 
+@Get('courses')
+async getMyCourses(@Req() req: AuthenticatedRequest) {
+  // console.log("REQ.USER:", req.user);
+  const trainerId = req.user.userId;
+  // console.log("TRAINER ID:", trainerId);
+
+  return this.trainerService.getMyCourses(trainerId);
+}
+
+
+
+
+
+
   @Get('courses/:courseId/learners')
   async getEnrolledLearners(
     @Param('courseId') courseId: string,

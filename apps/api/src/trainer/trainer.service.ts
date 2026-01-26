@@ -18,7 +18,7 @@ export class TrainerService {
     private readonly courseModel: Model<CourseDocument>,
     @InjectModel(Enrollment.name)
     private readonly enrollmentModel: Model<EnrollmentDocument>,
-  ) {}
+  ) { }
 
   async verifyCourseOwnership(courseId: string, trainerId: string) {
     const course = await this.courseModel.findById(courseId);
@@ -26,36 +26,34 @@ export class TrainerService {
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-    // console.log('course.trainerId:', course.trainerId.toString());
-    // console.log('trainerId from token:', trainerId);
-
     if (course.trainerId.toString() !== trainerId) {
       throw new ForbiddenException('You are not allowed to access this course');
     }
-
     return course;
   }
+
+  async getMyCourses(trainerId: string) {
+    const courses = await this.courseModel.find({ trainerId: new Types.ObjectId(trainerId) });
+    // console.log("Courses for trainer:", courses);
+    return courses;
+  }
+
+
+
   async getEnrolledLearners(courseId: string, trainerId: string) {
     await this.verifyCourseOwnership(courseId, trainerId);
-
-    // récupérer les apprenants inscrits
     const enrollments = await this.enrollmentModel
-      .find({ courseId: new Types.ObjectId(courseId) }) // transforme en ObjectId
+      .find({ courseId: new Types.ObjectId(courseId) })
       .populate('learnerId', 'name email role');
-
-    // console.log('enrollments in service:', enrollments);
-
-    // console.log('courseId in service:', courseId);
-
     return enrollments;
   }
+
 
   async getLearnerReport(
     trainerId: string,
     courseId: string,
     learnerId: string,
   ) {
-    // Ownership check
     const course = await this.verifyCourseOwnership(courseId, trainerId);
 
     const enrollment = await this.enrollmentModel

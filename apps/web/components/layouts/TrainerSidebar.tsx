@@ -10,11 +10,11 @@ export default function TrainerSidebar({ user }: { user: User }) {
     const pathname = usePathname();
 
     const links = [
-        { href: '/dashboard', label: 'Dashboard', icon: Home },
-        { href: '/courses', label: 'My Courses', icon: BookOpen },
-        { href: '/students', label: 'Students', icon: Users },
-        { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-        { href: '/settings', label: 'Settings', icon: Settings },
+        { href: '/trainer/dashboard', label: 'Dashboard', icon: Home },
+        { href: '/trainer/courses', label: 'My Courses', icon: BookOpen },
+        // { href: '/students', label: 'Students', icon: Users },
+        { href: '/trainer/analytics', label: 'Analytics', icon: BarChart3 },
+        { href: '/trainer/settings', label: 'Settings', icon: Settings },
     ];
 
     return (
