@@ -39,6 +39,11 @@ export class QuizAttemptsController {
     return this.service.submitAttempt(attemptId, learnerId);
   }
 
+  // get all trainer attempts on a quiz
+  @Get(':quizId/attempts')
+  async getAllAttemptsOnQuiz(@Param('quizId') quizId: string) {
+    return this.service.getAllAttemptsOnQuiz(quizId);
+  }
   // get one attempt
   @Get('/attempts/:attemptId')
   async getOneAttemptWithResult(@Param('attemptId') attemptId: string) {
