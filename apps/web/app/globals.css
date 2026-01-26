@@ -5,6 +5,7 @@
   --primary: #261144;
   --primary-hover: #3a1a5e;
   --secondary: #ad82de;
+  /* Added secondary-hover */
   --secondary-hover: #9966cc;
 
   --background: #f7f5fb;
@@ -60,6 +61,8 @@
     --muted: #a094b8;
     --border: #2f1b4d;
     --primary-hover: #3d2161;
+    /* Added secondary-hover for dark mode */
+    --secondary-hover: #8a59c2; 
   }
 }
 

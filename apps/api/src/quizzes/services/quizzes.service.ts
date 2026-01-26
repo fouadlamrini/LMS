@@ -12,8 +12,12 @@ import { Quiz, QuizDocument } from '../schemas/quiz.schema';
 
 @Injectable()
 export class QuizzesService {
-  constructor(@InjectModel(Quiz.name) private quizModel: Model<QuizDocument>) {}
+  constructor(@InjectModel(Quiz.name) private quizModel: Model<QuizDocument>) { }
 
+  // helper to calculate score
+  private calculateTotalScore(questions: any[]): number {
+    return (questions ?? []).reduce((acc, q) => acc + (q.score ?? 0), 0);
+  }
   async create(createQuizDto: CreateQuizDto) {
     const createdQuiz = new this.quizModel({ ...createQuizDto, questions: [] });
     return createdQuiz.save();
@@ -24,24 +28,37 @@ export class QuizzesService {
   }
 
   async findOne(id: string): Promise<QuizDocument> {
-    const quiz = await this.quizModel.findById(id).exec();
+    const quiz = await this.quizModel
+      .findById(id)
+      .populate({
+        path: 'moduleId',
+        select: '_id title courseId',
+        populate: {
+          path: 'courseId',
+          select: '_id title'
+        }
+      }
+      ).
+      exec();
     if (!quiz) throw new NotFoundException(`Quiz with ID ${id} not found`);
+    console.log(quiz);
+    
     return quiz;
   }
 
   async update(id: string, updateQuizDto: UpdateQuizDto): Promise<Quiz> {
     const quiz = await this.findOne(id);
-    const passingScore = updateQuizDto.passingScore ?? quiz.passingScore;
 
-    // Validate passingScore against existing questions
-    const totalScore = quiz.questions.reduce((acc, q) => acc + q.score, 0);
-    if (passingScore > totalScore) {
+    const totalScore = this.calculateTotalScore(quiz.questions);
+    const requestedPassingScore = updateQuizDto.passingScore ?? quiz.passingScore;
+
+    if (requestedPassingScore > totalScore) {
       throw new BadRequestException(
-        `Passing score (${passingScore}) cannot exceed total score of questions (${totalScore})`,
+        `Passing score (${requestedPassingScore}) cannot exceed total score (${totalScore})`,
       );
     }
 
-    quiz.set({ ...updateQuizDto, passingScore });
+    quiz.set(updateQuizDto);
     return quiz.save();
   }
 
@@ -52,11 +69,8 @@ export class QuizzesService {
   }
 
   getDefaultPassingScore(quiz: QuizDocument): number {
-    const totalScore = (quiz.questions ?? []).reduce(
-      (sum, q) => sum + (q.score ?? 0),
-      0,
-    );
-    return Math.ceil(totalScore / 2);
+    const total = this.calculateTotalScore(quiz.questions);
+    return Math.ceil(total * 0.7); // 70% of total score
   }
 
   async changeQuizStatus(quizId: string, newStatus: QuizStatus) {
