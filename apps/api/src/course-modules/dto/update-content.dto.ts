@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsEnum } from 'class-validator';
 
 export class UpdateContentDto {
   @IsOptional()
@@ -8,4 +8,8 @@ export class UpdateContentDto {
   @IsOptional()
   @IsUrl()
   url?: string;
+
+  @IsOptional()
+  @IsEnum(['pdf', 'video'])
+  type?: 'pdf' | 'video';
 }

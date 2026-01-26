@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit2, Trash2, BookOpen, Loader2, Layers } from 'lucide-react';
-import { getCourse, deleteCourse, togglePublish } from '@/lib/api/courses';
+import { ArrowLeft, Edit2, Trash2, BookOpen, Loader2, Layers, X } from 'lucide-react';
+import { getCourse, deleteCourse, togglePublish, updateCourse } from '@/lib/api/courses';
 import type { Course } from '@/types';
 
 export default function CourseDetailPage() {
@@ -16,6 +16,13 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPublished, setEditPublished] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   function load() {
     setLoading(true);
@@ -32,14 +39,18 @@ export default function CourseDetailPage() {
     load();
   }, [id]);
 
-  async function handleDelete() {
-    if (!confirm('Delete this course? This cannot be undone.')) return;
+  function openDeleteModal() {
+    setShowDeleteModal(true);
+  }
+
+  async function handleDeleteConfirm() {
     setActionLoading('delete');
     try {
       await deleteCourse(id);
       router.push('/trainer/courses');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error deleting.');
+      setShowDeleteModal(false);
     } finally {
       setActionLoading(null);
     }
@@ -55,6 +66,34 @@ export default function CourseDetailPage() {
       setError(e instanceof Error ? e.message : 'Error updating status.');
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  function openEditModal() {
+    if (!course) return;
+    setEditTitle(course.title);
+    setEditDescription(course.description ?? '');
+    setEditPublished(course.published);
+    setEditError(null);
+    setShowEditModal(true);
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setEditError(null);
+    setSaving(true);
+    try {
+      const updated = await updateCourse(id, {
+        title: editTitle,
+        description: editDescription,
+        published: editPublished,
+      });
+      setCourse(updated);
+      setShowEditModal(false);
+    } catch (e: unknown) {
+      setEditError(e instanceof Error ? e.message : 'Error saving.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -98,13 +137,13 @@ export default function CourseDetailPage() {
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/trainer/courses/${id}/edit`}
+          <button
+            onClick={openEditModal}
             className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-surface transition-colors"
           >
             <Edit2 size={16} />
             Edit
-          </Link>
+          </button>
           <button
             onClick={handleTogglePublish}
             disabled={!!actionLoading}
@@ -114,11 +153,11 @@ export default function CourseDetailPage() {
             {course.published ? 'Unpublish' : 'Publish'}
           </button>
           <button
-            onClick={handleDelete}
+            onClick={openDeleteModal}
             disabled={!!actionLoading}
             className="inline-flex items-center gap-2 px-4 py-2 border border-error/50 text-error rounded-lg hover:bg-error/10 disabled:opacity-50 transition-colors"
           >
-            {actionLoading === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 size={16} />}
+            <Trash2 size={16} />
             Delete
           </button>
         </div>
@@ -149,6 +188,130 @@ export default function CourseDetailPage() {
             : 'No modules. Add modules to structure the course.'}
         </p>
       </div>
+
+      {/* Edit Course Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-border p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+              <h2 className="text-xl font-bold text-foreground">Edit course</h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditError(null);
+                }}
+                className="text-muted hover:text-foreground transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {editError && (
+                <div className="rounded-lg border border-error/50 bg-error/10 p-4 text-error">
+                  {editError}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="edit-title" className="block text-sm font-medium text-foreground mb-1">
+                  Title *
+                </label>
+                <input
+                  id="edit-title"
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-description" className="block text-sm font-medium text-foreground mb-1">
+                  Description *
+                </label>
+                <textarea
+                  id="edit-description"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  required
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  id="edit-published"
+                  type="checkbox"
+                  checked={editPublished}
+                  onChange={(e) => setEditPublished(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <label htmlFor="edit-published" className="text-sm text-foreground">
+                  Published
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditError(null);
+                  }}
+                  className="px-4 py-2 border border-border rounded-lg hover:bg-surface transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-border p-6 max-w-md w-full shadow-2xl">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-foreground mb-2">Delete course</h2>
+              <p className="text-sm text-muted">
+                Are you sure you want to delete this course? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={!!actionLoading}
+                className="px-4 py-2 border border-border rounded-lg hover:bg-surface transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={!!actionLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-error text-white rounded-lg hover:bg-error/90 disabled:opacity-50 transition-colors"
+              >
+                {actionLoading === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

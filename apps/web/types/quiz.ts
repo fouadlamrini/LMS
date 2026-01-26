@@ -1,13 +1,13 @@
 import { QuestionType, QuizStatus } from "./enums";
 
 export interface Option {
-    _id: string;
+    _id?: string;
     text: string;
     correct: boolean;
 }
 
 export interface Question {
-    _id: string;
+    _id?: string;
     text: string;
     type: QuestionType;
     options?: Option[];
@@ -18,11 +18,18 @@ export interface Question {
 
 export interface Quiz {
     _id: string;
-    moduleId: string;
+    moduleId: {
+        _id: string;
+        title?: string;
+        courseId: {
+            _id?: string;
+            title?: string;
+        };
+    };
     questions: Question[];
     passingScore: number;
     status: QuizStatus;
-    createdAt: string;
+    createdAt?: string;
     updatedAt: string;
 }
 

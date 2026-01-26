@@ -3,8 +3,9 @@ export interface Course {
     title: string;
     description?: string;
     published: boolean;
-    trainerId: string;
+    trainerId: string | { _id: string; fullName: string; email: string };
     modules: string[];
+    modulesCount?: number;
     createdAt: string;
     updatedAt: string;
 }
