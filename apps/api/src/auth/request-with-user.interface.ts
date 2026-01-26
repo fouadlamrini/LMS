@@ -6,5 +6,6 @@ export interface RequestWithUser extends Request {
     userId: string; // _id dyal user as string
     role: Role;
     email: string;
+    fullName: string;
   };
 }

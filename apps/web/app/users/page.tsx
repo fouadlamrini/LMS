@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Plus, X } from 'lucide-react';
 import { getAllUsers, createUser } from '../../lib/users';
 import { User } from '../../types/user';
 import { Role } from '../../types/enums';
@@ -80,7 +80,7 @@ export default function UsersPage() {
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all shadow-sm"
         >
-          <PlusIcon className="w-5 h-5" />
+          <Plus size={20} />
           <span>Ajouter User</span>
         </button>
       </div>
@@ -98,7 +98,7 @@ export default function UsersPage() {
             <div className="flex justify-between items-center mb-6 border-b pb-4">
               <h2 className="text-xl font-bold text-gray-800">Nouveau Utilisateur</h2>
               <button onClick={() => { setShowForm(false); reset(); }}>
-                <XMarkIcon className="w-6 h-6 text-gray-400 hover:text-red-500 transition-colors" />
+                <X size={24} className="text-gray-400 hover:text-red-500 transition-colors" />
               </button>
             </div>
 

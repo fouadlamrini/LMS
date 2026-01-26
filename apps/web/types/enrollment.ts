@@ -15,7 +15,7 @@ export interface ModuleProgress {
 
 export interface Enrollment {
     _id: string;
-    courseId: string;
+    courseId: string | { _id: string; title: string; description?: string; category?: string };
     learnerId: string;
     moduleProgress: ModuleProgress[];
     overallProgress: number;

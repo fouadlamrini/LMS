@@ -26,6 +26,7 @@ export interface AddContentPayload {
 export interface UpdateContentPayload {
   title?: string;
   url?: string;
+  type?: 'pdf' | 'video';
 }
 
 // ——— Endpoints ———
@@ -82,11 +83,17 @@ export async function addContent(
 export async function updateContent(
   moduleId: string,
   contentId: string,
-  payload: UpdateContentPayload
+  payload: UpdateContentPayload & { file?: File }
 ): Promise<CourseModule> {
+  const form = new FormData();
+  if (payload.title !== undefined) form.append('title', payload.title);
+  if (payload.url !== undefined) form.append('url', payload.url);
+  if (payload.type !== undefined) form.append('type', payload.type);
+  if (payload.file) form.append('file', payload.file);
+
   const { data } = await api.patch<CourseModule>(
     `/course-modules/${moduleId}/content/${contentId}`,
-    payload
+    form
   );
   return data;
 }
