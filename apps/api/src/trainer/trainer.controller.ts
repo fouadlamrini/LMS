@@ -34,7 +34,7 @@ async getMyCourses(@Req() req: AuthenticatedRequest) {
 
 
 
-  @Get('courses/:courseId/learners')
+  @Get('courses/:courseId/enrollments')
   async getEnrolledLearners(
     @Param('courseId') courseId: string,
     @Req() req: AuthenticatedRequest,
