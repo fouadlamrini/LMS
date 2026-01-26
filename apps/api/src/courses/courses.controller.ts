@@ -36,13 +36,13 @@ export class CoursesController {
   @Post()
   @Roles(Role.TRAINER)
   create(@Body() createCourseDto: CreateCourseDto, @Request() req: any) {
-    return this.coursesService.create(createCourseDto, req.user.sub);
+    return this.coursesService.create(createCourseDto, req.user.userId);
   }
 
   @Get()
   @Roles(Role.LEARNER, Role.TRAINER, Role.ADMIN)
   findAll(@Request() req: any) {
-    return this.coursesService.findAll(req.user.userId, req.user.role);
+    return this.coursesService.findAll(req.user.sub, req.user.role);
   }
 
   @Get(':id')
