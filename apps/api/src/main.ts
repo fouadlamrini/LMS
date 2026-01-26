@@ -6,9 +6,25 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import { existsSync, mkdirSync } from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Create uploads directories if they don't exist
+  const uploadsDir = join(__dirname, '..', 'uploads');
+  const pdfsDir = join(uploadsDir, 'pdfs');
+  const videosDir = join(uploadsDir, 'videos');
+  
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+  if (!existsSync(pdfsDir)) {
+    mkdirSync(pdfsDir, { recursive: true });
+  }
+  if (!existsSync(videosDir)) {
+    mkdirSync(videosDir, { recursive: true });
+  }
 
   // Enable cookie parsing
   app.use(cookieParser());

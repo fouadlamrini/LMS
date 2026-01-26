@@ -28,7 +28,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@Req() req: RequestWithUser) {
-    return await this.usersService.getMe(req.user.sub);
+    return await this.usersService.getMe(req.user.userId);
   }
 
   // Update profile of logged-in user
@@ -38,7 +38,7 @@ export class UsersController {
     @Req() req: RequestWithUser,
     @Body() dto: UpdateProfileDto,
   ) {
-    return await this.usersService.updateProfile(req.user.sub, dto);
+    return await this.usersService.updateProfile(req.user.userId, dto);
   }
 
   // ================= ADMIN ROUTES =================
