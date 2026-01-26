@@ -190,7 +190,7 @@ export default function LearnerReport() {
                                                 className={`h-full transition-all ${
                                                     report.overallProgress === 100
                                                         ? 'bg-success'
-                                                        : 'bg-gradient-to-r from-primary to-secondary'
+                                                        : 'bg-linear-to-r from-primary to-secondary'
                                                 }`}
                                                 style={{ width: `${report.overallProgress}%` }}
                                             ></div>

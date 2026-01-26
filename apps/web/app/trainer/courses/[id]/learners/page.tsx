@@ -210,7 +210,7 @@ export default function Page() {
                 <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-border">
+                            <thead className="bg-linear-to-r from-primary/5 to-secondary/5 border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                                         Student
