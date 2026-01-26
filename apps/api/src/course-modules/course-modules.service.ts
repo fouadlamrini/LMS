@@ -95,8 +95,13 @@ export class CourseModulesService {
         })
         .lean();
 
+      // If not enrolled, return modules with accessible: false (locked)
       if (!enrollment) {
-        throw new ForbiddenException('Not enrolled in this course');
+        return modules.map((mod) => ({
+          ...mod,
+          accessible: false, // All modules locked if not enrolled
+          completed: false,
+        }));
       }
 
       let previousCompleted = true;
@@ -265,6 +270,7 @@ export class CourseModulesService {
     contentId: string,
     updateContentDto: UpdateContentDto,
     trainerId: string,
+    file?: Express.Multer.File,
   ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
     const course = await this.coursesService.findOne(
@@ -288,14 +294,36 @@ export class CourseModulesService {
       );
     }
 
+    // Determine new type (use updated type or keep current)
+    const newType = updateContentDto.type || content.type;
+    
+    // Determine new URL
+    let newUrl = updateContentDto.url || content.url;
+    
+    // If file is uploaded, use it
+    if (file) {
+      if (newType === 'pdf') {
+        newUrl = `/uploads/pdfs/${file.filename}`;
+      } else if (newType === 'video') {
+        newUrl = `/uploads/videos/${file.filename}`;
+      }
+    } else if (newType !== content.type) {
+      // Type changed but no file provided - keep URL if it's a video URL, otherwise require file
+      if (newType === 'pdf' && !file) {
+        throw new BadRequestException('PDF file upload is required when changing to PDF type');
+      }
+      // If changing from PDF to video and no file/URL provided, keep current URL (might be invalid)
+    }
+
     // Update content fields
     const updatedModule = await this.moduleModel
       .findOneAndUpdate(
         { _id: moduleId, 'contents._id': new Types.ObjectId(contentId) },
         {
           $set: {
-            'contents.$.title': updateContentDto.title || content.title,
-            'contents.$.url': updateContentDto.url || content.url,
+            'contents.$.title': updateContentDto.title !== undefined ? updateContentDto.title : content.title,
+            'contents.$.url': newUrl,
+            'contents.$.type': newType,
           },
         },
         { new: true },

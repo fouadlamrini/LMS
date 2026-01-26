@@ -6,12 +6,16 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course } from './schemas/course.schema';
+import { CourseModule } from '../course-modules/schemas/course-module.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Injectable()
 export class CoursesService {
-  constructor(@InjectModel(Course.name) private courseModel: Model<Course>) {}
+  constructor(
+    @InjectModel(Course.name) private courseModel: Model<Course>,
+    @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
+  ) {}
 
   async create(
     createCourseDto: CreateCourseDto,
@@ -26,19 +30,45 @@ export class CoursesService {
     return course.save();
   }
 
-  async findAll(userId?: string, role?: string): Promise<Course[]> {
+  async findAll(userId?: string, role?: string): Promise<any[]> {
+    let courses: any[];
+    
     // Learners see only published courses
     if (role === 'learner') {
-      return this.courseModel.find({ published: true }).exec();
-    }
-
-    if (role === 'trainer' && userId) {
-      return this.courseModel
+      courses = await this.courseModel
+        .find({ published: true })
+        .populate('trainerId', 'fullName email')
+        .lean()
+        .exec();
+    } else if (role === 'trainer' && userId) {
+      courses = await this.courseModel
         .find({ trainerId: new Types.ObjectId(userId) })
+        .populate('trainerId', 'fullName email')
+        .lean()
+        .exec();
+    } else {
+      // Admin sees all courses with trainer info
+      courses = await this.courseModel
+        .find()
+        .populate('trainerId', 'fullName email')
+        .lean()
         .exec();
     }
 
-    return this.courseModel.find().exec();
+    // Count modules for each course
+    const coursesWithModuleCount = await Promise.all(
+      courses.map(async (course) => {
+        const moduleCount = await this.moduleModel.countDocuments({
+          courseId: new Types.ObjectId(course._id),
+        }).exec();
+        return {
+          ...course,
+          modulesCount: moduleCount,
+        };
+      })
+    );
+
+    return coursesWithModuleCount;
   }
 
   async findOne(id: string, role?: string): Promise<Course> {

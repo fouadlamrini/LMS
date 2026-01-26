@@ -10,11 +10,11 @@ export default function AdminSidebar({ user }: { user: User }) {
     const pathname = usePathname();
 
     const links = [
-        { href: '/dashboard', label: 'Dashboard', icon: Home },
+        { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
         { href: '/users', label: 'User Management', icon: Users },
-        { href: '/courses', label: 'All Courses', icon: BookOpen },
-        { href: '/permissions', label: 'Permissions', icon: Shield },
-        { href: '/settings', label: 'System Settings', icon: Settings },
+        { href: '/admin/courses', label: 'All Courses', icon: BookOpen },
+        { href: '/admin/permissions', label: 'Permissions', icon: Shield },
+        { href: '/admin/settings', label: 'System Settings', icon: Settings },
     ];
 
     return (
