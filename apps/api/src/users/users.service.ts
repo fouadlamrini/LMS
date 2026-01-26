@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import * as nodemailer from 'nodemailer';
 import { User } from './user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -10,13 +12,43 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
+  private transporter = nodemailer.createTransport({
+    service: 'gmail', // or your SMTP
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  private generatePassword(): string {
+    return crypto.randomBytes(8).toString('hex');
+  }
+
+  private async sendWelcomeEmail(
+    email: string,
+    password: string,
+  ): Promise<void> {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Welcome to LMS Platform',
+      text: `Hello,\n\nYour account has been created on the LMS platform.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login here: http://localhost:3000/login\n\nPlease change your password after logging in.\n\nBest regards,\nLMS Team`,
+    };
+    await this.transporter.sendMail(mailOptions);
+  }
+
   // ================= ADMIN =================
 
   async create(data: CreateUserDto): Promise<User> {
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+    let password = data.password;
+    if (!password) {
+      password = this.generatePassword();
     }
-    return await this.userModel.create(data);
+    data.password = await bcrypt.hash(password, 10);
+    const user = await this.userModel.create(data);
+    // Send email with the plain password
+    await this.sendWelcomeEmail(user.email, password);
+    return user;
   }
 
   async findAll(): Promise<User[]> {
@@ -25,7 +57,7 @@ export class UsersService {
 
   async findById(id: string): Promise<User> {
     const user = await this.userModel.findById(id).select('-password').exec();
-    if (!user) throw new NotFoundException('User ma-l9it-hach');
+    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
@@ -37,7 +69,7 @@ export class UsersService {
       .findByIdAndUpdate(id, data, { new: true })
       .select('-password')
       .exec();
-    if (!updated) throw new NotFoundException('User ma-l9it-hach');
+    if (!updated) throw new NotFoundException('User not found');
     return updated;
   }
 
@@ -46,7 +78,7 @@ export class UsersService {
       .findByIdAndDelete(id)
       .select('-password')
       .exec();
-    if (!deleted) throw new NotFoundException('User ma-l9it-hach');
+    if (!deleted) throw new NotFoundException('User not found');
     return deleted;
   }
 
@@ -63,7 +95,7 @@ export class UsersService {
       .findById(userId)
       .select('-password')
       .exec();
-    if (!user) throw new NotFoundException('User ma-l9it-hach');
+    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
@@ -88,7 +120,25 @@ export class UsersService {
       .select('-password')
       .exec();
 
-    if (!updated) throw new NotFoundException('User ma-l9it-hach');
+    if (!updated) throw new NotFoundException('User not found');
     return updated;
+  }
+
+  async updatePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isOldPasswordValid)
+      throw new NotFoundException('Old password is incorrect');
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await this.userModel.findByIdAndUpdate(userId, {
+      password: hashedNewPassword,
+    });
   }
 }

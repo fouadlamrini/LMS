@@ -3,13 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Users, BookOpen, Shield, Settings, LogOut } from 'lucide-react';
-
-type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-};
+import { User } from '@/types';
+import LogoutButton from '../auth/LogoutButton';
 
 export default function AdminSidebar({ user }: { user: User }) {
     const pathname = usePathname();
@@ -29,7 +24,6 @@ export default function AdminSidebar({ user }: { user: User }) {
                 <div className="text-xl font-bold text-foreground">
                     LMS<span className="text-secondary">Platform</span>
                 </div>
-                <p className="text-xs text-secondary mt-1 font-semibold">Admin Panel</p>
             </div>
 
             {/* User Info */}
@@ -39,7 +33,7 @@ export default function AdminSidebar({ user }: { user: User }) {
                         <Shield size={20} className="text-secondary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{user.fullName}</p>
                         <p className="text-xs text-secondary truncate">Administrator</p>
                     </div>
                 </div>
@@ -57,8 +51,8 @@ export default function AdminSidebar({ user }: { user: User }) {
                                 <Link
                                     href={link.href}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                                            ? 'bg-error text-white shadow-sm'
-                                            : 'text-muted hover:bg-background hover:text-foreground'
+                                        ? 'bg-error text-white shadow-sm'
+                                        : 'text-muted hover:bg-background hover:text-foreground'
                                         }`}
                                 >
                                     <Icon size={20} />
@@ -70,18 +64,10 @@ export default function AdminSidebar({ user }: { user: User }) {
                 </ul>
             </nav>
 
+
             {/* Logout */}
             <div className="p-4 border-t border-border">
-                <button
-                    onClick={() => {
-                        // Handle logout
-                        console.log('Logout clicked');
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-error/10 transition-all w-full"
-                >
-                    <LogOut size={20} />
-                    <span className="font-medium text-sm">Logout</span>
-                </button>
+                <LogoutButton />
             </div>
         </aside>
     );

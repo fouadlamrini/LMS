@@ -1,41 +1,19 @@
-import { redirect } from 'next/navigation';
-import TrainerSidebar from '@/components/layouts/TrainerSidebar';
+'use client';
 
-async function getServerSession() {
-    // TODO: Implement actual session check
-    return {
-        user: {
-            id: '2',
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            role: 'TRAINER',
-        },
-    };
-}
+import { ReactNode } from 'react';
+import PublicHeader from '@/components/layouts/PublicHeader';
+import PublicFooter from '@/components/layouts/PublicFooter';
 
-export default async function TrainerLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    const session = await getServerSession();
-
-    if (!session) {
-        redirect('/login');
-    }
-
-    if (session.user.role !== 'TRAINER') {
-        redirect('/unauthorized');
-    }
-
+export default function PublicLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="min-h-screen bg-background flex">
-            <TrainerSidebar user={session.user} />
-            <main className="flex-1 overflow-auto">
-                <div className="p-8 max-w-7xl mx-auto">
+        <>
+            <PublicHeader />
+            <div className="min-h-screen bg-background flex">
+                <main className="flex-1 overflow-auto">
                     {children}
-                </div>
-            </main>
-        </div>
+                </main>
+            </div>
+            <PublicFooter />
+        </>
     );
 }

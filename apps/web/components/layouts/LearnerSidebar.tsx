@@ -3,15 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, BarChart3, User, LogOut } from 'lucide-react';
+import { User as UserType } from '@/types';
+import LogoutButton from '../auth/LogoutButton';
 
-type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-};
-
-export default function LearnerSidebar({ user }: { user: User }) {
+export default function LearnerSidebar({ user }: { user: UserType }) {
     const pathname = usePathname();
 
     const links = [
@@ -36,11 +31,11 @@ export default function LearnerSidebar({ user }: { user: User }) {
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
                         <span className="text-secondary font-semibold text-sm">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user.fullName.charAt(0).toUpperCase()}
                         </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{user.fullName}</p>
                         <p className="text-xs text-muted truncate">{user.email}</p>
                     </div>
                 </div>
@@ -74,17 +69,9 @@ export default function LearnerSidebar({ user }: { user: User }) {
 
             {/* Logout */}
             <div className="p-4 border-t border-border">
-                <button
-                    onClick={() => {
-                        // Handle logout
-                        console.log('Logout clicked');
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error/10 transition-all w-full"
-                >
-                    <LogOut size={20} />
-                    <span className="font-medium text-sm">Logout</span>
-                </button>
+                <LogoutButton />
             </div>
+
         </aside>
     );
 }
