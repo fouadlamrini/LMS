@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getEnrolledLearners } from "../../../../lib/api/trainer";
+import Link from "next/link";
+
 
 export default function Page() {
     const { courseId } = useParams();
@@ -23,22 +25,7 @@ export default function Page() {
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <button className="flex items-center gap-2 text-muted hover:text-primary transition-colors mb-4">
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                        Retour aux cours
-                    </button>
+
                     <h1 className="text-4xl font-bold text-foreground mb-2">
                         Apprenants Inscrits
                     </h1>
@@ -117,11 +104,19 @@ export default function Page() {
                                             {learner.learnerId.email}
                                         </p>
                                     </div>
-
+                                    <Link
+                                        href={`/trainer/courses/${courseId}/learners/${learner.learnerId._id}/report`}
+                                        className="inline-block"
+                                    >
+                                        <button className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition">
+                                            Voir le rapport détaillé
+                                        </button>
+                                    </Link>
                                     {/* Status Badge */}
                                     <span className="text-xs bg-success/10 text-success px-3 py-1 rounded-full font-medium">
                                         Actif
                                     </span>
+
                                 </div>
                             </div>
                         ))}

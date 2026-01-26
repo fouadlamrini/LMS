@@ -51,6 +51,7 @@ async getMyCourses(@Req() req: AuthenticatedRequest) {
     @Param('learnerId') learnerId: string,
     @Req() req: AuthenticatedRequest,
   ) {
+    console.log("Fetching report for courseId:", courseId, "learnerId:", learnerId);
     return this.trainerService.getLearnerReport(
       req.user.userId,
       courseId,

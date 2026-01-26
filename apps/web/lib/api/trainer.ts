@@ -1,6 +1,5 @@
 import api from "../axios";
 
-// Récupérer les apprenants inscrits
 console.log("hi");
 
 export const getMyCourses = async () => {
@@ -17,13 +16,13 @@ export const getEnrolledLearners = async (courseId: string) => {
 
 
 
-// Récupérer le rapport d’un learner
-export const getLearnerReport = async (
-  courseId: string,
-  learnerId: string
-) => {
-  const res = await api.get(
-    `/trainer/courses/${courseId}/learners/${learnerId}/report`
-  );
-  return res.data;
-};
+  export const getLearnerReport = async (
+    courseId: string,
+    learnerId: string
+  ) => {
+    const res = await api.get(
+      `/trainer/courses/${courseId}/learners/${learnerId}/report`
+    );
+    console.log("Learner Report:", res.data);
+    return res.data;
+  };

@@ -117,7 +117,7 @@ export default function Page() {
                                     {/* Action Button */}
                                     <Link href={`/trainer/courses/${course._id}`}>
                                         <button className="w-full bg-primary/5 hover:bg-secondary text-muted hover:text-white py-2.5 rounded-lg font-medium transition-all group-hover:bg-primary group-hover:text-white">
-                                            Voir les détails
+                                            enrollements
                                         </button>
                                     </Link>
                                 </div>

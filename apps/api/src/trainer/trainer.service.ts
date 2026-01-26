@@ -34,7 +34,6 @@ export class TrainerService {
 
   async getMyCourses(trainerId: string) {
     const courses = await this.courseModel.find({ trainerId: new Types.ObjectId(trainerId) });
-    // console.log("Courses for trainer:", courses);
     return courses;
   }
 
@@ -55,7 +54,7 @@ export class TrainerService {
     learnerId: string,
   ) {
     const course = await this.verifyCourseOwnership(courseId, trainerId);
-
+    console.log("course id:", courseId, "learnerId:", learnerId);
     const enrollment = await this.enrollmentModel
       .findOne({
         courseId: new Types.ObjectId(courseId),
