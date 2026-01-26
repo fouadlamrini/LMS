@@ -95,8 +95,13 @@ export class CourseModulesService {
         })
         .lean();
 
+      // If not enrolled, return modules with accessible: false (locked)
       if (!enrollment) {
-        throw new ForbiddenException('Not enrolled in this course');
+        return modules.map((mod) => ({
+          ...mod,
+          accessible: false, // All modules locked if not enrolled
+          completed: false,
+        }));
       }
 
       let previousCompleted = true;

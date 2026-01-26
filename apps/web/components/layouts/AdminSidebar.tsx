@@ -11,7 +11,7 @@ export default function AdminSidebar({ user }: { user: User }) {
 
     const links = [
         { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
-        { href: '/admin/users', label: 'User Management', icon: Users },
+        { href: '/users', label: 'User Management', icon: Users },
         { href: '/admin/courses', label: 'All Courses', icon: BookOpen },
         { href: '/admin/permissions', label: 'Permissions', icon: Shield },
         { href: '/admin/settings', label: 'System Settings', icon: Settings },

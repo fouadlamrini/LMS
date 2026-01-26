@@ -11,7 +11,7 @@ export default function LearnerSidebar({ user }: { user: UserType }) {
 
     const links = [
         { href: '/dashboard', label: 'Dashboard', icon: Home },
-        { href: '/courses', label: 'My Courses', icon: BookOpen },
+        { href: '/learner/courses', label: 'My Courses', icon: BookOpen },
         { href: '/progress', label: 'Progress', icon: BarChart3 },
         { href: '/profile', label: 'Profile', icon: User },
     ];
