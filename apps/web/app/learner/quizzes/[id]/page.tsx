@@ -76,7 +76,7 @@ export default function Page() {
     const startAttempt = async () => {
         try {
             setLoading(true);
-            const res = await axios.post(`/courses/${courseId}/quizzes/${quiz._id}/attempts`);
+            const res = await axios.post(`/quizzes/${quiz._id}/attempts`);
             setAttemptId(res.data._id);
             setStarted(true);
         } catch (err) {
@@ -91,7 +91,7 @@ export default function Page() {
 
         setSubmitting(true);
         try {
-            await axios.post(`/courses/${courseId}/quizzes/attempts/${attemptId}/submit`);
+            await axios.post(`/quizzes/attempts/${attemptId}/submit`);
             router.push(`/learner/quizzes/${quizId}/attempts`);
         } catch (err) {
             console.error('Failed to submit:', err);
@@ -114,7 +114,7 @@ export default function Page() {
 
         try {
             setLoading(true);
-            await axios.post(`/courses/${courseId}/quizzes/attempts/${attemptId}/answer`, payload);
+            await axios.post(`/quizzes/attempts/${attemptId}/answer`, payload);
             setAnsweredCount(prev => prev + 1);
 
             // If last question, submit the quiz automatically

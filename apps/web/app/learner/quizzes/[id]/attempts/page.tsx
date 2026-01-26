@@ -1,7 +1,8 @@
 import React from 'react'
 
 export default function page() {
+    
   return (
-    <div>attempts list</div>
+    <div>page list</div>
   )
 }

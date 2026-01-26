@@ -276,6 +276,36 @@ export class QuizAttemptsService {
 
     return module.courseId;
   }
+
+  // get with one result
+  async getWithResult(attemptId: string) {
+    // Get the attempt
+    const attempt = await this.quizAttemptModel
+      .findById(attemptId)
+      .populate({
+        path: 'quizId',
+        model: 'Quiz',
+        populate: {
+          path: 'questions.options',
+          model: 'Option',
+        },
+      })
+      .exec();
+
+    if (!attempt) throw new NotFoundException('Attempt not found');
+
+    return attempt;
+  }
+
+  //  get trainer attempts on a quiz 
+  async getAllAttemptsOnQuiz(quizId: string) {
+    const attempts = await this.quizAttemptModel
+      .find({ quizId: new Types.ObjectId(quizId) })
+      .populate('quizId')
+      .exec();
+
+    return attempts;
+  }
 }
 
 /* ================= HELPERS ================= */
