@@ -277,6 +277,60 @@ export class QuizAttemptsService {
     return module.courseId;
   }
 
+
+  async getLearnerAttemptsOnQuiz(learnerId: string, quizId: string) {
+    // 1️⃣ Get the quiz
+    const quiz = await this.quizzesService.findOne(quizId);
+    if (!quiz) throw new NotFoundException('Quiz not found');
+
+    // 2️⃣ Get courseId from module
+    const courseId = await this.getCourseIdFromQuiz(quiz);
+
+    // 3️⃣ Find learner's enrollment in that course
+    const enrollment = await this.enrollmentModel.findOne({
+      learnerId: new Types.ObjectId(learnerId),
+      courseId: new Types.ObjectId(courseId),
+    });
+    if (!enrollment) throw new NotFoundException('Enrollment not found');
+    console.log('quiz.moduleId', quiz.moduleId);
+    console.log(enrollment);
+
+    // 4️⃣ Find the moduleProgress for this quiz
+    const moduleProgress = enrollment.moduleProgress.find(
+      (mp) => mp.moduleId.toString() === quiz.moduleId._id.toString()
+    );
+
+    if (!moduleProgress) return []; // no attempts yet
+
+    // 5️⃣ Fetch attempts (only necessary fields)
+    const attempts = await this.quizAttemptModel
+      .find({
+        _id: { $in: moduleProgress.quizAttemptIds },
+        quizId: quiz._id, // <-- filter only this quiz
+      })
+      .select('_id score passed completed submittedAt createdAt quizId')
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+    // 6️⃣ Populate course and module titles
+    const course = await this.courseModuleModel
+      .findById(quiz.moduleId)
+      .populate({
+        path: 'courseId',
+        select: 'title',
+      })
+      .select('title courseId')
+      .lean();
+    const results = attempts.map(attempt => ({
+      ...attempt,
+      passingScore: quiz.passingScore,
+      moduleTitle: course ? course.title : 'Unknown Module',
+      courseTitle: course && course.courseId ? (course.courseId as any).title : 'Unknown Course',
+    }));
+    return results;
+  }
+
+
   // get with one result
   async getWithResult(attemptId: string) {
     // Get the attempt
@@ -297,15 +351,6 @@ export class QuizAttemptsService {
     return attempt;
   }
 
-  //  get trainer attempts on a quiz 
-  async getAllAttemptsOnQuiz(quizId: string) {
-    const attempts = await this.quizAttemptModel
-      .find({ quizId: new Types.ObjectId(quizId) })
-      .populate('quizId')
-      .exec();
-
-    return attempts;
-  }
 }
 
 /* ================= HELPERS ================= */
