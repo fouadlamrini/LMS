@@ -6,9 +6,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Plus, X, Eye } from 'lucide-react';
-import { getAllUsers, createUser } from '../../lib/users';
-import { User } from '../../types/user';
-import { Role } from '../../types/enums';
+import { getAllUsers, createUser } from '../../../lib/users';
+import { User } from '../../../types/user';
+import { Role } from '../../../types/enums';
 
 // 
 const userSchema = z.object({
@@ -225,7 +225,7 @@ export default function UsersPage() {
                   </td>
                   <td className="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 text-right">
                     <Link
-                      href={`/users/${user._id}`}
+                      href={`/admin/users/${user._id}`}
                       className="inline-flex items-center gap-1.5 sm:gap-2 text-success hover:text-success/80 font-bold hover:underline transition-colors"
                     >
                       <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { getUserById, updateUser } from "../../../lib/users";
-import { User } from "../../../types/user";
+import { getUserById, updateUser } from "../../../../lib/users";
+import { User } from "../../../../types/user";
 import { 
   User as UserIcon, Mail, Shield, Hash, 
   Calendar, GraduationCap, FileText, 

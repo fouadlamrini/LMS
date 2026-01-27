@@ -6,7 +6,7 @@ import { Loader2, User, Lock, Save, AlertCircle, CheckCircle2 } from 'lucide-rea
 import { useAuth } from '@/providers/AuthProvider';
 import api from '@/lib/axios';
 
-export default function TrainerSettingsPage() {
+export default function AdminSettingsPage() {
   const router = useRouter();
   const { user, checkAuth } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
@@ -200,7 +200,7 @@ export default function TrainerSettingsPage() {
                       </label>
                       <input
                         type="text"
-                        value="Trainer"
+                        value="Administrator"
                         disabled
                         className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-muted/10 text-muted text-sm sm:text-base cursor-not-allowed"
                       />
