@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Loader2, Trash2, FileText, Layers, X, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, Trash2, FileText, Layers, X, GripVertical, HelpCircle } from 'lucide-react';
 import { getCourse } from '@/lib/api/courses';
 import { getModulesByCourse, createModule, deleteModule, updateModule } from '@/lib/api/course-modules';
 import type { Course } from '@/types';
 import type { CourseModule } from '@/types';
+import { createQuiz } from '@/lib/api/quiz';
 
 export default function CourseModulesPage() {
   const params = useParams();
@@ -85,6 +86,7 @@ export default function CourseModulesPage() {
     }
   }
 
+
   // Drag and drop handlers
   function handleDragStart(index: number) {
     setDraggedIndex(index);
@@ -127,6 +129,25 @@ export default function CourseModulesPage() {
         setDraggedIndex(null);
       });
   }
+
+  const handleCreateQuiz = async (moduleId: string) => {
+    if (actionLoading) return;
+
+    setActionLoading(moduleId);
+    try {
+      // 1. Call the API to create the quiz
+      const quiz = await createQuiz(moduleId);
+
+      // 2. Navigate to the quiz editor/page using the new Quiz ID
+      router.push(`/trainer/quizzes/${quiz._id}`);
+    } catch (error: any) {
+      // If the error is 409 (Conflict) or similar because it exists, 
+      // you might want to fetch the existing one instead.
+      console.error('Failed to handle quiz action:', error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   if (loading || !course) {
     return (
@@ -186,9 +207,8 @@ export default function CourseModulesPage() {
               onDragStart={() => handleDragStart(i)}
               onDragOver={(e) => handleDragOver(e, i)}
               onDragEnd={handleDragEnd}
-              className={`flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-border bg-surface p-4 cursor-move transition-opacity ${
-                draggedIndex === i ? 'opacity-50' : ''
-              } ${isReordering ? 'pointer-events-none' : ''}`}
+              className={`flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-border bg-surface p-4 cursor-move transition-opacity ${draggedIndex === i ? 'opacity-50' : ''
+                } ${isReordering ? 'pointer-events-none' : ''}`}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -212,6 +232,15 @@ export default function CourseModulesPage() {
                   <FileText size={14} />
                   Content
                 </Link>
+
+                <button
+                  onClick={() => handleCreateQuiz(m._id)}
+                  className="inline-flex items-center gap-2 px-5 py-1.5 cursor-pointer border border-border rounded-lg hover:bg-surface text-sm"
+                >
+                  <HelpCircle size={14} />
+                  Quiz
+                </button>
+
                 <button
                   onClick={() => openDeleteModal(m._id)}
                   disabled={!!actionLoading}
