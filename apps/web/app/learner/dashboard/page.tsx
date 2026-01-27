@@ -95,7 +95,7 @@ export default function LearnerDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <Loader2 className="w-8 h-8 animate-spin text-muted" />
       </div>
     );
@@ -175,7 +175,7 @@ export default function LearnerDashboardPage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent = 0 }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -197,7 +197,7 @@ export default function LearnerDashboardPage() {
         ) : (
           <div className="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Enrollment Status</h2>
-            <div className="flex items-center justify-center h-[250px]">
+            <div className="flex items-center justify-center h-62.5">
               <p className="text-sm text-muted">No enrollment data available</p>
             </div>
           </div>
@@ -243,11 +243,11 @@ export default function LearnerDashboardPage() {
                 </RadialBarChart>
               </ResponsiveContainer>
               {/* Custom Legend */}
-              <div className="space-y-3 sm:space-y-4 w-full sm:w-auto flex-shrink-0">
+              <div className="space-y-3 sm:space-y-4 w-full sm:w-auto shrink-0">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded flex-shrink-0" style={{ backgroundColor: COLORS.completed }} />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded shrink-0" style={{ backgroundColor: COLORS.completed }} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 sm:gap-4 w-full sm:min-w-[160px]">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4 w-full sm:min-w-40">
                       <span className="text-xs sm:text-sm font-semibold text-foreground">Completed</span>
                       <span className="text-sm sm:text-base font-bold text-foreground">{stats.completedEnrollments}</span>
                     </div>
@@ -255,9 +255,9 @@ export default function LearnerDashboardPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded flex-shrink-0" style={{ backgroundColor: COLORS.active }} />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded shrink-0" style={{ backgroundColor: COLORS.active }} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 sm:gap-4 w-full sm:min-w-[160px]">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4 w-full sm:min-w-40">
                       <span className="text-xs sm:text-sm font-semibold text-foreground">In Progress</span>
                       <span className="text-sm sm:text-base font-bold text-foreground">{stats.inProgressEnrollments}</span>
                     </div>
@@ -270,7 +270,7 @@ export default function LearnerDashboardPage() {
         ) : (
           <div className="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Learning Progress</h2>
-            <div className="flex items-center justify-center h-[250px]">
+            <div className="flex items-center justify-center h-62.5">
               <p className="text-sm text-muted">No progress data available</p>
             </div>
           </div>
@@ -313,7 +313,7 @@ export default function LearnerDashboardPage() {
         ) : (
           <div className="rounded-lg border border-border bg-surface p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Enrollment Overview</h2>
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-75">
               <p className="text-sm text-muted">No enrollment data available</p>
             </div>
           </div>
