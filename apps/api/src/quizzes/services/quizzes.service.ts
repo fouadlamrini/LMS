@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateQuizDto } from '../dto/quiz/create-quiz.dto';
 import { UpdateQuizDto } from '../dto/quiz/update-quiz.dto';
 import { QuizStatus } from 'src/enums/quiz.enum';
@@ -18,9 +18,70 @@ export class QuizzesService {
   private calculateTotalScore(questions: any[]): number {
     return (questions ?? []).reduce((acc, q) => acc + (q.score ?? 0), 0);
   }
+
+  async findByModuleId(moduleId: string): Promise<QuizDocument | null> {
+    try {
+      const quiz = await this.quizModel
+        .findOne({ moduleId: new Types.ObjectId(moduleId) })
+        .populate({
+          path: 'moduleId',
+          select: '_id title courseId',
+          populate: {
+            path: 'courseId',
+            select: '_id title'
+          }
+        })
+        .exec();
+      return quiz;
+    } catch (error) {
+      console.error('Error finding quiz by moduleId:', error);
+      return null;
+    }
+  }
+
   async create(createQuizDto: CreateQuizDto) {
-    const createdQuiz = new this.quizModel({ ...createQuizDto, questions: [] });
-    return createdQuiz.save();
+    const moduleIdObj = new Types.ObjectId(createQuizDto.moduleId);
+    
+    try {
+      // Use findOneAndUpdate with upsert to ensure atomic operation and prevent duplicates
+      const quiz = await this.quizModel
+        .findOneAndUpdate(
+          { moduleId: moduleIdObj },
+          {
+            $setOnInsert: {
+              moduleId: moduleIdObj,
+              questions: [],
+              passingScore: 0,
+              status: QuizStatus.DRAFT
+            }
+          },
+          {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true
+          }
+        )
+        .populate({
+          path: 'moduleId',
+          select: '_id title courseId',
+          populate: {
+            path: 'courseId',
+            select: '_id title'
+          }
+        })
+        .exec();
+
+      return quiz;
+    } catch (error: any) {
+      // If duplicate key error (E11000), find and return existing quiz
+      if (error.code === 11000 || error.codeName === 'DuplicateKey') {
+        const existingQuiz = await this.findByModuleId(createQuizDto.moduleId);
+        if (existingQuiz) {
+          return existingQuiz;
+        }
+      }
+      throw error;
+    }
   }
 
   async findAll(): Promise<Quiz[]> {

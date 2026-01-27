@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Trash2, BookOpen, Loader2, Layers, X, User, Eye, ExternalLink, FileText, Video } from 'lucide-react';
+import { ArrowLeft, Trash2, BookOpen, Loader2, Layers, X, User, Eye, ExternalLink, FileText, Video, CircleQuestionMark } from 'lucide-react';
 import { getCourse, deleteCourse } from '@/lib/api/courses';
 import { getModulesByCourse } from '@/lib/api/course-modules';
+import { getQuizByModule } from '@/lib/api/quiz';
 import { getContentUrl } from '@/lib/axios';
 import type { Course } from '@/types';
-import type { CourseModule, ModuleContent } from '@/types';
+import type { CourseModule, ModuleContent, Quiz } from '@/types';
+import { QuestionType, QuizStatus } from '@/types/enums';
 
 export default function AdminCourseDetailPage() {
   const params = useParams();
@@ -23,6 +25,8 @@ export default function AdminCourseDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [viewingModule, setViewingModule] = useState<CourseModule | null>(null);
   const [viewingContent, setViewingContent] = useState<ModuleContent | null>(null);
+  const [viewingQuiz, setViewingQuiz] = useState<Quiz | null>(null);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
 
   function load() {
     setLoading(true);
@@ -58,6 +62,29 @@ export default function AdminCourseDetailPage() {
       setActionLoading(null);
     }
   }
+
+  async function handleViewQuiz(moduleId: string) {
+    setLoadingQuiz(true);
+    try {
+      const quiz = await getQuizByModule(moduleId);
+      if (!quiz) {
+        setError('No quiz found for this module.');
+        return;
+      }
+      setViewingQuiz(quiz);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error loading quiz.');
+    } finally {
+      setLoadingQuiz(false);
+    }
+  }
+
+  const QuestionTypeLabels = {
+    [QuestionType.MULTIPLE_CHOICE]: 'Multiple Choice',
+    [QuestionType.MULTIPLE_SELECT]: 'Multiple Select',
+    [QuestionType.TRUE_FALSE]: 'True/False',
+    [QuestionType.SHORT_ANSWER]: 'Short Answer'
+  };
 
   if (loading || !course) {
     return (
@@ -154,6 +181,20 @@ export default function AdminCourseDetailPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  {module.quizId && (
+                    <button
+                      onClick={() => handleViewQuiz(module._id)}
+                      disabled={loadingQuiz}
+                      className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-border rounded-lg hover:bg-surface text-xs sm:text-sm"
+                      >
+                      {loadingQuiz ? (
+                        <Loader2 size={12} className="sm:w-3.5 sm:h-3.5 animate-spin" />
+                      ) : (
+                        <CircleQuestionMark size={12} className="sm:w-3.5 sm:h-3.5" />
+                      )}
+                      <span className="hidden sm:inline">Quiz</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => setViewingModule(module)}
                     className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-border rounded-lg hover:bg-surface text-xs sm:text-sm"
@@ -235,8 +276,8 @@ export default function AdminCourseDetailPage() {
                             <Video className="flex-shrink-0 text-muted w-4 h-4 sm:w-5 sm:h-5" />
                           )}
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm sm:text-base font-medium text-foreground truncate">{content.title || 'Sans titre'}</p>
-                            <p className="text-xs text-muted">{content.type === 'pdf' ? 'PDF' : 'Vidéo'}</p>
+                            <p className="text-sm sm:text-base font-medium text-foreground truncate">{content.title || 'Untitled'}</p>
+                            <p className="text-xs text-muted">{content.type === 'pdf' ? 'PDF' : 'Video'}</p>
                           </div>
                         </div>
                         <button
@@ -307,6 +348,138 @@ export default function AdminCourseDetailPage() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Quiz Modal */}
+      {viewingQuiz && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-surface rounded-xl border border-border shadow-2xl w-full h-full sm:w-[90%] sm:h-[90%] lg:w-[75%] lg:h-[75%] max-w-[90vw] max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border flex-shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">Quiz Details</h2>
+                <p className="text-xs sm:text-sm text-muted mt-1 truncate">
+                  Module: {typeof viewingQuiz.moduleId === 'object' ? viewingQuiz.moduleId.title || 'N/A' : 'N/A'}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingQuiz(null)}
+                className="text-muted hover:text-foreground transition-colors flex-shrink-0"
+              >
+                <X size={20} className="sm:w-6 sm:h-6" />
+              </button>
+            </div>
+            <div className="p-3 sm:p-4 flex-1 overflow-y-auto">
+              {/* Quiz Info */}
+              <div className="mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="rounded-lg border border-border bg-surface p-3 sm:p-4">
+                  <p className="text-xs text-muted mb-1">Status</p>
+                  <span
+                    className={`inline-block text-xs sm:text-sm px-2 py-1 rounded ${
+                      viewingQuiz.status === QuizStatus.PUBLISHED
+                        ? 'bg-success/20 text-success'
+                        : viewingQuiz.status === QuizStatus.ARCHIVED
+                        ? 'bg-muted/30 text-muted'
+                        : 'bg-warning/20 text-warning'
+                    }`}
+                  >
+                    {viewingQuiz.status.charAt(0).toUpperCase() + viewingQuiz.status.slice(1)}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-border bg-surface p-3 sm:p-4">
+                  <p className="text-xs text-muted mb-1">Passing Score</p>
+                  <p className="text-sm sm:text-base font-semibold text-foreground">{viewingQuiz.passingScore}%</p>
+                </div>
+                <div className="rounded-lg border border-border bg-surface p-3 sm:p-4">
+                  <p className="text-xs text-muted mb-1">Total Questions</p>
+                  <p className="text-sm sm:text-base font-semibold text-foreground">{viewingQuiz.questions.length}</p>
+                </div>
+              </div>
+
+              {/* Questions List */}
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Questions</h3>
+                {viewingQuiz.questions.length === 0 ? (
+                  <p className="text-xs sm:text-sm text-muted">No questions in this quiz.</p>
+                ) : (
+                  <div className="space-y-3 sm:space-y-4">
+                    {viewingQuiz.questions.map((question, index) => (
+                      <div
+                        key={question._id}
+                        className="rounded-lg border border-border bg-surface p-3 sm:p-4"
+                      >
+                        <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <span className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
+                            {index + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm sm:text-base font-medium text-foreground mb-1">{question.text}</p>
+                            <span className="inline-block text-xs px-2 py-0.5 rounded bg-muted/30 text-muted">
+                              {QuestionTypeLabels[question.type]}
+                            </span>
+                            <span className="ml-2 text-xs text-muted">· Score: {question.score} points</span>
+                          </div>
+                        </div>
+
+                        {/* Options for Multiple Choice/Select */}
+                        {(question.type === QuestionType.MULTIPLE_CHOICE || question.type === QuestionType.MULTIPLE_SELECT) &&
+                          question.options &&
+                          question.options.length > 0 && (
+                            <div className="ml-8 sm:ml-10 mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
+                              {question.options.map((option, optIndex) => (
+                                <div
+                                  key={optIndex}
+                                  className={`flex items-center gap-2 text-xs sm:text-sm p-2 rounded ${
+                                    option.correct ? 'bg-success/10 border border-success/30' : 'bg-muted/10 border border-border'
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                                      option.correct ? 'bg-success text-white' : 'bg-muted/30 text-muted'
+                                    }`}
+                                  >
+                                    {option.correct ? '✓' : ''}
+                                  </span>
+                                  <span className={option.correct ? 'text-success font-medium' : 'text-muted'}>{option.text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                        {/* True/False Answer */}
+                        {question.type === QuestionType.TRUE_FALSE && (
+                          <div className="ml-8 sm:ml-10 mt-2 sm:mt-3">
+                            <div
+                              className={`inline-flex items-center gap-2 text-xs sm:text-sm p-2 rounded ${
+                                question.correctAnswerBoolean
+                                  ? 'bg-success/10 border border-success/30 text-success'
+                                  : 'bg-muted/10 border border-border text-muted'
+                              }`}
+                            >
+                              <span className="font-medium">
+                                {question.correctAnswerBoolean === true ? 'True' : 'False'}
+                              </span>
+                              <span className="text-success">✓</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Short Answer */}
+                        {question.type === QuestionType.SHORT_ANSWER && question.correctAnswerText && (
+                          <div className="ml-8 sm:ml-10 mt-2 sm:mt-3">
+                            <div className="bg-muted/10 border border-border rounded p-2 sm:p-3">
+                              <p className="text-xs text-muted mb-1">Correct Answer:</p>
+                              <p className="text-xs sm:text-sm text-foreground">{question.correctAnswerText}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

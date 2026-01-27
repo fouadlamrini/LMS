@@ -27,6 +27,15 @@ export class QuizzesController {
     return this.quizzesService.findAll();
   }
 
+  @Get('module/:moduleId')
+  async findByModule(@Param('moduleId') moduleId: string) {
+    const quiz = await this.quizzesService.findByModuleId(moduleId);
+    if (!quiz) {
+      throw new NotFoundException(`Quiz for module ${moduleId} not found`);
+    }
+    return quiz;
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.quizzesService.findOne(id);

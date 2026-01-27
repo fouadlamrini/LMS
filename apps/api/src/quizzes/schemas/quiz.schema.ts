@@ -45,7 +45,7 @@ export const QuestionSchema = SchemaFactory.createForClass(Question);
 
 @Schema({ timestamps: true, collection: 'quizzes' })
 export class Quiz {
-  @Prop({ type: Types.ObjectId, ref: 'CourseModule', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'CourseModule', required: true, unique: true })
   moduleId!: Types.ObjectId;
 
   @Prop({ type: [QuestionSchema], default: [] })
@@ -58,3 +58,5 @@ export class Quiz {
   status!: QuizStatus;
 }
 export const QuizSchema = SchemaFactory.createForClass(Quiz);
+
+QuizSchema.index({ moduleId: 1 }, { unique: true });

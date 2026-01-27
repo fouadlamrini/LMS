@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit2, Trash2, BookOpen, Loader2, Layers, X } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, BookOpen, Loader2, Layers, X, Eye } from 'lucide-react';
 import { getCourse, deleteCourse, togglePublish, updateCourse } from '@/lib/api/courses';
+import { getModulesByCourse } from '@/lib/api/course-modules';
 import type { Course } from '@/types';
+import type { CourseModule } from '@/types';
 
 export default function CourseDetailPage() {
   const params = useParams();
@@ -13,6 +15,7 @@ export default function CourseDetailPage() {
   const id = params.id as string;
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [modules, setModules] = useState<CourseModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -27,8 +30,14 @@ export default function CourseDetailPage() {
   function load() {
     setLoading(true);
     setError(null);
-    getCourse(id)
-      .then(setCourse)
+    Promise.all([
+      getCourse(id),
+      getModulesByCourse(id).catch(() => [])
+    ])
+      .then(([courseData, modulesData]) => {
+        setCourse(courseData);
+        setModules(modulesData);
+      })
       .catch((e: unknown) => {
         setError(e instanceof Error ? e.message : 'Error loading.');
       })
@@ -168,25 +177,52 @@ export default function CourseDetailPage() {
         <p className="text-foreground whitespace-pre-wrap">{course.description ?? '—'}</p>
       </div>
 
-      <div className="rounded-lg border border-border bg-surface p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <Layers size={20} />
-            Modules
+      {/* Modules */}
+      <div className="rounded-lg border border-border bg-surface p-4 sm:p-5 lg:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
+            <Layers size={18} className="sm:w-5 sm:h-5" />
+            Modules ({modules.length})
           </h2>
           <Link
             href={`/trainer/courses/${id}/modules`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
           >
-            <BookOpen size={16} />
+            <BookOpen size={14} className="sm:w-4 sm:h-4" />
             Manage modules
           </Link>
         </div>
-        <p className="text-sm text-muted">
-          {course.modules?.length
-            ? `${course.modules.length} module(s). Click "Manage modules" to edit them.`
-            : 'No modules. Add modules to structure the course.'}
-        </p>
+        {modules.length === 0 ? (
+          <p className="text-xs sm:text-sm text-muted">No modules. Add modules to structure the course.</p>
+        ) : (
+          <ul className="space-y-2 sm:space-y-3">
+            {modules.map((module, index) => (
+              <li
+                key={module._id}
+                className="flex items-center gap-2 sm:gap-3 rounded-lg border border-border bg-surface p-3 sm:p-4"
+              >
+                <span className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
+                  {index + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm sm:text-base font-semibold text-foreground truncate">{module.title}</h3>
+                  <p className="text-xs text-muted">
+                    {module.contents?.length ?? 0} content(s) {module.quizId ? '· Quiz' : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    href={`/trainer/courses/${id}/modules/${module._id}`}
+                    className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-border rounded-lg hover:bg-surface text-xs sm:text-sm"
+                  >
+                    <Eye size={12} className="sm:w-3.5 sm:h-3.5" />
+                    <span className="hidden sm:inline">View</span>
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Edit Course Modal */}
