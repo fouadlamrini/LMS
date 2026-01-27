@@ -26,6 +26,7 @@ export default function QuizBuilder() {
     const [passingScore, setPassingScore] = useState<number>(0);
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [dirtyIndices, setDirtyIndices] = useState<Set<number>>(new Set());
+    const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
 
     const hasUnsavedChanges = useCallback(() => {
         const hasTemp = quiz?.questions.some(q => q._id?.startsWith('temp-'));
@@ -79,8 +80,10 @@ export default function QuizBuilder() {
                 next.delete(index);
                 return next;
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("API Operation Failed", error);
+            const errorMessage = error.response?.data?.message || error.message || "Failed to save question";
+            alert(`Error: ${errorMessage}`);
             throw error;
         }
     };
@@ -126,13 +129,20 @@ export default function QuizBuilder() {
     };
 
     const deleteQuestion = async (index: number) => {
-        if (!quiz || !confirm("Delete this question?")) return;
+        if (!quiz) return;
+        setDeleteQuestionIndex(index);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!quiz || deleteQuestionIndex === null) return;
+        const index = deleteQuestionIndex;
         const qId = quiz.questions[index]._id;
 
         if (qId?.startsWith('temp-')) {
             const newQuestions = quiz.questions.filter((_, i) => i !== index);
             setQuiz({ ...quiz, questions: newQuestions });
             setSelectedQuestion(null);
+            setDeleteQuestionIndex(null);
             return;
         }
 
@@ -140,8 +150,10 @@ export default function QuizBuilder() {
             await axios.delete(`/quizzes/${quizId}/questions/${qId}`);
             setQuiz({ ...quiz, questions: quiz.questions.filter((_, i) => i !== index) });
             setSelectedQuestion(null);
+            setDeleteQuestionIndex(null);
         } catch (error) {
             console.error(error);
+            setDeleteQuestionIndex(null);
         }
     };
 
@@ -214,10 +226,10 @@ export default function QuizBuilder() {
     const totalScore = quiz.questions.reduce((sum, q) => sum + (q.score || 0), 0);
 
     return (
-        <div className="min-h-screen bg-background max-w-6xl">
+        <div className="h-screen bg-background w-full flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="bg-surface border-b border-border sticky top-0 z-10 shadow-sm">
-                <div className="mx-auto px-6 py-4">
+            <div className="bg-surface border-b border-border flex-shrink-0 z-10 shadow-sm w-full">
+                <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-start justify-between gap-6">
                         {/* Left: Breadcrumb & Title */}
                         <div className="flex-1 min-w-0">
@@ -236,8 +248,8 @@ export default function QuizBuilder() {
                                     {quiz.moduleId.title}
                                 </Link>
                             </div>
-                            <h1 className="text-2xl font-bold text-foreground mb-1">Quiz Builder</h1>
-                            <div className="flex items-center gap-4 text-sm">
+                            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Quiz Builder</h1>
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                                 <div className="flex items-center gap-2">
                                     <span className="text-muted">Status:</span>
                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${quiz.status === 'published' ? 'bg-success/10 text-success' :
@@ -259,10 +271,10 @@ export default function QuizBuilder() {
                         </div>
 
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <button
                                 onClick={() => setShowPreview(!showPreview)}
-                                className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-surface hover:border-secondary/30 transition-all text-sm font-medium">
+                                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 border border-border rounded-lg hover:bg-surface hover:border-secondary/30 transition-all text-xs sm:text-sm font-medium">
                                 {showPreview ? (
                                     <>
                                         <SquarePen className="w-4 h-4" />
@@ -280,7 +292,7 @@ export default function QuizBuilder() {
                                 value={quiz.status}
                                 onChange={(e) => changeStatus(e.target.value)}
                                 disabled={isUpdating}
-                                className="px-4 py-2 border border-border rounded-lg bg-surface hover:border-secondary/30 transition-all text-sm font-medium cursor-pointer disabled:opacity-50">
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 border border-border rounded-lg bg-surface hover:border-secondary/30 transition-all text-xs sm:text-sm font-medium cursor-pointer disabled:opacity-50">
                                 <option value="draft">Draft</option>
                                 <option value="published">Published</option>
                                 <option value="archived">Archived</option>
@@ -291,9 +303,9 @@ export default function QuizBuilder() {
             </div>
 
             {/* Main Content */}
-            <div className="mx-auto mt-6">
+            <div className="flex-1 overflow-y-auto w-full px-4 sm:px-6 py-4 sm:py-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                     <div className="bg-surface border border-border rounded-xl p-4 hover:border-secondary/30 transition-all">
                         <div className="flex items-center justify-between">
                             <div>
@@ -351,10 +363,10 @@ export default function QuizBuilder() {
                 {showPreview ? (
                     <QuizPreview quiz={quiz} />
                 ) : (
-                    <div className="grid grid-cols-12 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 min-h-0">
                         {/* Enhanced Sidebar */}
-                        <div className="col-span-4">
-                            <div className="bg-surface border border-border rounded-xl overflow-hidden sticky top-24">
+                        <div className="lg:col-span-4 h-full flex flex-col">
+                            <div className="bg-surface border border-border rounded-xl overflow-hidden flex flex-col h-full">
                                 {/* Sidebar Header */}
                                 <div className="flex items-center justify-between p-4 border-b border-border bg-liner-to-r from-primary/5 to-secondary/5">
                                     <h2 className="font-semibold text-foreground flex items-center gap-2">
@@ -458,7 +470,7 @@ export default function QuizBuilder() {
                         </div>
 
                         {/* Editor */}
-                        <div className="col-span-8">
+                        <div className="lg:col-span-8 h-full overflow-y-auto">
                             {selectedQuestion !== null && quiz.questions[selectedQuestion] ? (
                                 <QuestionEditor
                                     key={quiz.questions[selectedQuestion]._id}
@@ -469,11 +481,11 @@ export default function QuizBuilder() {
                                     isNew={quiz.questions[selectedQuestion]._id?.startsWith('temp-') ?? false}
                                 />
                             ) : (
-                                <div className="bg-surface border-2 border-dashed border-border rounded-xl p-20 text-center">
+                                <div className="bg-surface border-2 border-dashed border-border rounded-xl p-12 sm:p-20 text-center h-full flex items-center justify-center">
                                     <div className="text-muted/40">
-                                        <SquarePen className="w-16 h-16 mx-auto mb-4" />
-                                        <p className="text-lg font-medium mb-2">No Question Selected</p>
-                                        <p className="text-sm">Select a question from the sidebar or create a new one to begin editing</p>
+                                        <SquarePen className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4" />
+                                        <p className="text-base sm:text-lg font-medium mb-2">No Question Selected</p>
+                                        <p className="text-xs sm:text-sm">Select a question from the sidebar or create a new one to begin editing</p>
                                     </div>
                                 </div>
                             )}
@@ -481,6 +493,36 @@ export default function QuizBuilder() {
                     </div>
                 )}
             </div>
+
+            {/* Delete Question Confirmation Modal */}
+            {deleteQuestionIndex !== null && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+                    <div className="bg-surface rounded-xl border border-border p-4 sm:p-6 max-w-md w-full shadow-2xl">
+                        <div className="mb-4 sm:mb-6">
+                            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-2">Delete Question</h2>
+                            <p className="text-sm text-muted">
+                                Are you sure you want to delete this question? This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setDeleteQuestionIndex(null)}
+                                className="w-full sm:w-auto px-4 py-2 text-sm border border-border rounded-lg hover:bg-surface transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteConfirm}
+                                className="w-full sm:w-auto px-4 py-2 text-sm bg-error text-white rounded-lg hover:bg-error/90 transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
