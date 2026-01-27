@@ -9,6 +9,7 @@ import { getModulesByCourse } from '@/lib/api/course-modules';
 import { enrollInCourse, getMyEnrollments } from '@/lib/api/enrollments';
 import type { Course } from '@/types';
 import type { CourseModule } from '@/types';
+import ResumeButton from '@/components/course/ResumeButton';
 
 export default function LearnerCourseDetailPage() {
   const params = useParams();
@@ -102,8 +103,8 @@ export default function LearnerCourseDetailPage() {
     );
   }
 
-  const trainerName = typeof course.trainerId === 'object' 
-    ? course.trainerId.fullName 
+  const trainerName = typeof course.trainerId === 'object'
+    ? course.trainerId.fullName
     : 'Unknown Trainer';
 
   return (
@@ -192,6 +193,9 @@ export default function LearnerCourseDetailPage() {
                               {module.contents.length} {module.contents.length === 1 ? 'content item' : 'content items'}
                             </p>
                           )}
+                        </div>
+                        <div>
+                          <ResumeButton courseId={id} />
                         </div>
                       </div>
                     </Link>

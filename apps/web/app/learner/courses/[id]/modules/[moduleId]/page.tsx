@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, FileText, Video, ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getContentUrl } from '@/lib/axios';
@@ -9,12 +9,14 @@ import { getCourse } from '@/lib/api/courses';
 import { getModulesByCourse, getModule } from '@/lib/api/course-modules';
 import type { Course } from '@/types';
 import type { CourseModule, ModuleContent } from '@/types';
+import { useResume } from '../../layout';
 
 export default function LearnerModuleContentPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params.id as string;
   const moduleId = params.moduleId as string;
+  const { updateResume } = useResume();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [module, setModule] = useState<CourseModule | null>(null);
@@ -22,6 +24,12 @@ export default function LearnerModuleContentPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedContent, setSelectedContent] = useState<ModuleContent | null>(null);
   const [viewingContent, setViewingContent] = useState<ModuleContent | null>(null);
+
+  const urlContentId = useSearchParams().get('contentId');
+  const savedPosition = parseInt(useSearchParams().get('t') || '0', 10);
+
+  // Ref to track video element
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   function load() {
     setLoading(true);
@@ -45,6 +53,82 @@ export default function LearnerModuleContentPage() {
   useEffect(() => {
     load();
   }, [courseId, moduleId]);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([getCourse(courseId), getModulesByCourse(courseId)])
+      .then(([c, list]) => {
+        setCourse(c);
+        const m = list.find((x) => x._id === moduleId) ?? null;
+        setModule(m);
+
+        if (m && m.contents.length > 0) {
+          // 3. Logic to show content by default
+          if (urlContentId) {
+            const contentFromUrl = m.contents.find(item => item._id === urlContentId);
+            setSelectedContent(contentFromUrl || m.contents[0]);
+          } else {
+            setSelectedContent(m.contents[0]);
+          }
+        }
+      })
+      .catch((e: any) => {
+        setError(e.message || 'Error loading module');
+      })
+      .finally(() => setLoading(false));
+  }, [courseId, moduleId, urlContentId]);
+
+  // 4. Handle Video Seeking to the saved position
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !savedPosition) return;
+
+    const handleLoadedMetadata = () => {
+      video.currentTime = savedPosition;
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+  }, [selectedContent, savedPosition]);
+  // Update resume when content changes
+  useEffect(() => {
+    if (selectedContent) {
+      updateResume(selectedContent._id, 0);
+    }
+  }, [selectedContent?._id]);
+
+  // Track video progress
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement || !selectedContent || selectedContent.type === 'pdf') return;
+
+    const handleTimeUpdate = () => {
+      if (videoElement.currentTime > 0) {
+        updateResume(selectedContent._id, Math.floor(videoElement.currentTime));
+      }
+    };
+
+    // Update every 5 seconds to avoid too many updates
+    let intervalId: NodeJS.Timeout;
+    const startTracking = () => {
+      intervalId = setInterval(() => {
+        if (!videoElement.paused && videoElement.currentTime > 0) {
+          updateResume(selectedContent._id, Math.floor(videoElement.currentTime));
+        }
+      }, 5000);
+    };
+
+    videoElement.addEventListener('play', startTracking);
+    videoElement.addEventListener('pause', handleTimeUpdate);
+    videoElement.addEventListener('ended', handleTimeUpdate);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      videoElement.removeEventListener('play', startTracking);
+      videoElement.removeEventListener('pause', handleTimeUpdate);
+      videoElement.removeEventListener('ended', handleTimeUpdate);
+    };
+  }, [selectedContent, updateResume]);
 
   if (loading) {
     return (
@@ -174,6 +258,7 @@ export default function LearnerModuleContentPage() {
                       />
                     ) : (
                       <video
+                        ref={videoRef}
                         src={getContentUrl(selectedContent.url)}
                         controls
                         className="w-full h-full max-h-full"
@@ -200,11 +285,10 @@ export default function LearnerModuleContentPage() {
               {contents.map((c) => (
                 <li
                   key={c._id}
-                  className={`rounded-lg border p-4 cursor-pointer transition-all ${
-                    selectedContent?._id === c._id
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-surface hover:border-secondary'
-                  }`}
+                  className={`rounded-lg border p-4 cursor-pointer transition-all ${selectedContent?._id === c._id
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-surface hover:border-secondary'
+                    }`}
                   onClick={() => setSelectedContent(c)}
                 >
                   <div className="flex items-center gap-3">
@@ -228,10 +312,10 @@ export default function LearnerModuleContentPage() {
       {/* View Content Modal - 80% width and height, centered */}
       {viewingContent && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div 
+          <div
             className="bg-surface rounded-xl border border-border shadow-2xl flex flex-col"
-            style={{ 
-              width: '80vw', 
+            style={{
+              width: '80vw',
               height: '80vh'
             }}
           >

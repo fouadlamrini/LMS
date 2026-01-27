@@ -6,6 +6,9 @@ export type EnrollmentDocument = Enrollment & Document;
 @Schema({ _id: false })
 export class ResumeState {
   @Prop({ type: Types.ObjectId })
+  moduleId!: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
   contentId!: Types.ObjectId;
 
   @Prop()
@@ -27,9 +30,6 @@ export class ModuleProgress {
 
   @Prop({ type: [Types.ObjectId], ref: 'QuizAttempt', default: [] })
   quizAttemptIds!: Types.ObjectId[];
-
-  @Prop({ type: ResumeState, default: null })
-  resume?: ResumeState;
 }
 
 export const ModuleProgressSchema =
@@ -68,6 +68,9 @@ export class Enrollment {
     default: 'active',
   })
   status!: EnrollmentStatus;
+
+  @Prop({ type: ResumeState, default: null })
+  resume?: ResumeState;
 }
 
 export const EnrollmentSchema = SchemaFactory.createForClass(Enrollment);

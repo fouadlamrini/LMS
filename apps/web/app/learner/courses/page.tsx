@@ -8,6 +8,7 @@ import { getCourses } from '@/lib/api/courses';
 import { enrollInCourse, getMyEnrollments } from '@/lib/api/enrollments';
 import type { Course } from '@/types';
 import type { Enrollment } from '@/types';
+import ResumeButton from '@/components/course/ResumeButton';
 
 export default function LearnerCoursesPage() {
   const router = useRouter();
@@ -253,6 +254,7 @@ export default function LearnerCoursesPage() {
                         {enrollment.status === 'completed' ? 'Completed' : enrollment.status === 'active' ? 'In Progress' : enrollment.status}
                       </span>
                     </div>
+                    <ResumeButton courseId={course._id} />
                   </Link>
                 </li>
               );
