@@ -21,7 +21,7 @@ export const useResume = () => {
 export default function ModuleLayout({ children }: { children: ReactNode }) {
   const params = useParams();
   const courseId = params.id as string;
-  const moduleId = params.moduleId as string;
+  const moduleId = params.moduleId as string | undefined;
   
   const resumeDataRef = useRef({
     contentId: '',
@@ -32,9 +32,21 @@ export default function ModuleLayout({ children }: { children: ReactNode }) {
     resumeDataRef.current = { contentId, position };
   };
 
+  // Helper function to validate MongoDB ID format
+  const isValidMongoId = (id: string | undefined): boolean => {
+    if (!id) return false;
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
   const saveResumeAxios = async () => {
     const { contentId, position } = resumeDataRef.current;
-    if (!contentId) return;
+    // Validate required fields - check for valid MongoDB IDs and valid position
+    if (!contentId || !isValidMongoId(contentId) || 
+        !moduleId || !isValidMongoId(moduleId) || 
+        !courseId || !isValidMongoId(courseId) ||
+        typeof position !== 'number' || position < 0) {
+      return;
+    }
 
     try {
       const res = await api.patch(`/course-modules/courses/${courseId}/resume`, {
@@ -43,14 +55,22 @@ export default function ModuleLayout({ children }: { children: ReactNode }) {
         position,
       });
       
-    } catch (error) {
-      console.error('Axios resume save failed:', error);
+    } catch (error: any) {
+      // Only log if it's not a 404 (which can happen during navigation)
+      if (error.response?.status !== 404) {
+        console.error('Axios resume save failed:', error);
+      }
     }
   };
 
   const saveResumeFinal = () => {
     const { contentId, position } = resumeDataRef.current;
-    if (!contentId) return;
+    // Validate required fields - check for valid MongoDB IDs and valid position
+    if (!contentId || !isValidMongoId(contentId) || 
+        !moduleId || !isValidMongoId(moduleId) || 
+        typeof position !== 'number' || position < 0) {
+      return;
+    }
 
     const url = `${api.defaults.baseURL}/course-modules/courses/${courseId}/resume`;
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;

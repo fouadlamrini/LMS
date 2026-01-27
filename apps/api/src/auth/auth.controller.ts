@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './jwt.guard';
 import { Role } from 'src/roles/role.enum';
 
@@ -19,7 +20,10 @@ interface JwtPayload {
 }
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
@@ -38,17 +42,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(
+  async me(
     @Req()
     req: {
       user: { userId: string; email: string; role: string; fullName: string };
     },
   ) {
-    return {
-      userId: req.user.userId,
-      email: req.user.email,
-      role: req.user.role,
-      fullName: req.user.fullName,
-    };
+    // Fetch fresh user data from database instead of using JWT payload
+    const user = await this.usersService.getMe(req.user.userId);
+    return user;
   }
 }

@@ -10,12 +10,14 @@ import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { Enrollment } from './schemas/enrollment.schema';
 import { Course } from '../courses/schemas/course.schema';
+import { CourseModule } from '../course-modules/schemas/course-module.schema';
 
 @Injectable()
 export class EnrollmentsService {
   constructor(
     @InjectModel(Enrollment.name) private enrollmentModel: Model<Enrollment>,
     @InjectModel(Course.name) private courseModel: Model<Course>,
+    @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
   ) {}
 
   async enroll(courseId: string, learnerId: string): Promise<Enrollment> {
@@ -180,5 +182,58 @@ export class EnrollmentsService {
     if (!result) {
       throw new NotFoundException(`Enrollment with ID ${id} not found`);
     }
+  }
+
+  async completeModule(
+    courseId: string,
+    moduleId: string,
+    learnerId: string,
+  ): Promise<Enrollment> {
+    // 1. Find enrollment
+    const enrollment = await this.enrollmentModel
+      .findOne({
+        courseId: new Types.ObjectId(courseId),
+        learnerId: new Types.ObjectId(learnerId),
+        status: 'active',
+      })
+      .exec();
+
+    if (!enrollment) {
+      throw new NotFoundException('No active enrollment found for this course');
+    }
+
+    // 2. Find or create module progress entry
+    const moduleProgressIndex = enrollment.moduleProgress.findIndex(
+      (mp) => mp.moduleId.toString() === moduleId,
+    );
+
+    if (moduleProgressIndex >= 0) {
+      // Update existing entry
+      enrollment.moduleProgress[moduleProgressIndex].completed = true;
+    } else {
+      // Create new entry
+      enrollment.moduleProgress.push({
+        moduleId: new Types.ObjectId(moduleId),
+        completed: true,
+        quizAttemptIds: [],
+      });
+    }
+
+    // 3. Calculate overall progress
+    const totalModules = await this.moduleModel.countDocuments({
+      courseId: new Types.ObjectId(courseId),
+    }).exec();
+
+    if (totalModules > 0) {
+      const completedModules = enrollment.moduleProgress.filter(
+        (mp) => mp.completed,
+      ).length;
+      enrollment.overallProgress = Math.round(
+        (completedModules / totalModules) * 100,
+      );
+    }
+
+    // 4. Save and return
+    return enrollment.save();
   }
 }

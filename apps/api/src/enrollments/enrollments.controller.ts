@@ -92,4 +92,18 @@ export class EnrollmentsController {
   remove(@Param('id') id: string) {
     return this.enrollmentsService.remove(id);
   }
+
+  @Patch('courses/:courseId/modules/:moduleId/complete')
+  @Roles(Role.LEARNER)
+  completeModule(
+    @Param('courseId') courseId: string,
+    @Param('moduleId') moduleId: string,
+    @Request() req: any,
+  ) {
+    return this.enrollmentsService.completeModule(
+      courseId,
+      moduleId,
+      req.user.userId,
+    );
+  }
 }

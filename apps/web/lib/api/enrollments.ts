@@ -16,3 +16,7 @@ export async function getMyEnrollments(): Promise<Enrollment[]> {
 export async function unenrollFromCourse(enrollmentId: string): Promise<void> {
   await api.delete(`/enrollments/${enrollmentId}`);
 }
+
+export async function completeModule(courseId: string, moduleId: string): Promise<void> {
+  await api.patch(`/enrollments/courses/${courseId}/modules/${moduleId}/complete`);
+}

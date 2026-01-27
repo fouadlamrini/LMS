@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, FileText, Video, ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Loader2, FileText, Video, ExternalLink, X, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { getContentUrl } from '@/lib/axios';
 import { getCourse } from '@/lib/api/courses';
 import { getModulesByCourse, getModule } from '@/lib/api/course-modules';
+import { completeModule } from '@/lib/api/enrollments';
 import type { Course } from '@/types';
 import type { CourseModule, ModuleContent } from '@/types';
 import { useResume } from '../../layout';
@@ -24,6 +25,8 @@ export default function LearnerModuleContentPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedContent, setSelectedContent] = useState<ModuleContent | null>(null);
   const [viewingContent, setViewingContent] = useState<ModuleContent | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const urlContentId = useSearchParams().get('contentId');
   const savedPosition = parseInt(useSearchParams().get('t') || '0', 10);
@@ -41,6 +44,9 @@ export default function LearnerModuleContentPage() {
         setModule(m);
         if (!m) {
           setError('Module not found or not accessible');
+        } else {
+          // Check if module is completed
+          setIsCompleted((m as any).completed === true);
         }
       })
       .catch((e: any) => {
@@ -70,6 +76,8 @@ export default function LearnerModuleContentPage() {
           } else {
             setSelectedContent(m.contents[0]);
           }
+          // Check if module is completed
+          setIsCompleted((m as any).completed === true);
         }
       })
       .catch((e: any) => {
@@ -129,6 +137,28 @@ export default function LearnerModuleContentPage() {
       videoElement.removeEventListener('ended', handleTimeUpdate);
     };
   }, [selectedContent, updateResume]);
+
+  async function handleCompleteModule() {
+    await completeModuleDirectly();
+  }
+
+  async function completeModuleDirectly() {
+    setCompleting(true);
+    try {
+      await completeModule(courseId, moduleId);
+      setIsCompleted(true);
+      // Reload modules to unlock next module
+      await load();
+      // Navigate back to course page to see unlocked module
+      router.push(`/learner/courses/${courseId}`);
+    } catch (e: any) {
+      const msg = e.response?.data?.message || e.message || 'Error completing module.';
+      setError(msg);
+    } finally {
+      setCompleting(false);
+    }
+  }
+
 
   if (loading) {
     return (
@@ -229,6 +259,42 @@ export default function LearnerModuleContentPage() {
                   <ChevronRight size={16} />
                 </button>
               </div>
+
+              {/* Complete Module Button */}
+              {!isCompleted && (
+                <div className="mt-6 pt-6 border-t border-border">
+                  <button
+                    onClick={handleCompleteModule}
+                    disabled={completing}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-success text-white rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    {completing ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Completing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={18} />
+                        Complete Module
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-muted text-center mt-2">
+                    Mark this module as complete to unlock the next module
+                  </p>
+                </div>
+              )}
+
+              {/* Completed Status */}
+              {isCompleted && (
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex items-center justify-center gap-2 px-6 py-3 bg-success/20 text-success rounded-lg">
+                    <CheckCircle2 size={18} />
+                    <span className="font-medium">Module Completed</span>
+                  </div>
+                </div>
+              )}
 
               {/* Content Preview */}
               <div className="mt-6 border border-border rounded-lg overflow-hidden" style={{ height: '400px' }}>
@@ -368,6 +434,7 @@ export default function LearnerModuleContentPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

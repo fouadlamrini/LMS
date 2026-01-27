@@ -9,10 +9,16 @@ import { CreateQuizDto } from '../dto/quiz/create-quiz.dto';
 import { UpdateQuizDto } from '../dto/quiz/update-quiz.dto';
 import { QuizStatus } from 'src/enums/quiz.enum';
 import { Quiz, QuizDocument } from '../schemas/quiz.schema';
+import { Enrollment } from 'src/enrollments/schemas/enrollment.schema';
+import { CourseModule } from 'src/course-modules/schemas/course-module.schema';
 
 @Injectable()
 export class QuizzesService {
-  constructor(@InjectModel(Quiz.name) private quizModel: Model<QuizDocument>) { }
+  constructor(
+    @InjectModel(Quiz.name) private quizModel: Model<QuizDocument>,
+    @InjectModel(Enrollment.name) private enrollmentModel: Model<Enrollment>,
+    @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
+  ) { }
 
   // helper to calculate score
   private calculateTotalScore(questions: any[]): number {
@@ -139,5 +145,89 @@ export class QuizzesService {
 
     quiz.status = newStatus;
     return quiz.save();
+  }
+
+  async findQuizzesForLearner(learnerId: string) {
+    // Get all active enrollments for the learner
+    const enrollments = await this.enrollmentModel
+      .find({
+        learnerId: new Types.ObjectId(learnerId),
+        status: 'active',
+      })
+      .lean();
+
+    if (enrollments.length === 0) {
+      return [];
+    }
+
+    // Get all course IDs
+    const courseIds = enrollments.map(e => e.courseId);
+
+    // Get all modules for these courses
+    const modules = await this.moduleModel
+      .find({ courseId: { $in: courseIds } })
+      .populate('courseId', '_id title')
+      .lean();
+
+    // Get all quizzes for these modules
+    const moduleIds = modules.map(m => m._id);
+    const quizzes = await this.quizModel
+      .find({ moduleId: { $in: moduleIds } })
+      .populate({
+        path: 'moduleId',
+        select: '_id title courseId order',
+        populate: {
+          path: 'courseId',
+          select: '_id title'
+        }
+      })
+      .lean();
+
+    // Map quizzes with module completion status
+    return quizzes.map(quiz => {
+      const enrollment = enrollments.find(
+        e => e.courseId.toString() === (quiz.moduleId as any).courseId._id.toString()
+      );
+      
+      if (!enrollment) {
+        return {
+          ...quiz,
+          moduleCompleted: false,
+          moduleAccessible: false,
+        };
+      }
+
+      const courseModules = modules.filter(
+        m => m.courseId.toString() === (quiz.moduleId as any).courseId._id.toString()
+      ).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const moduleIndex = courseModules.findIndex(
+        m => m._id.toString() === quiz.moduleId._id.toString()
+      );
+
+      const moduleProgress = enrollment.moduleProgress?.find(
+        mp => mp.moduleId.toString() === quiz.moduleId._id.toString()
+      );
+
+      // Module is accessible if:
+      // 1. It's the first module (index 0), OR
+      // 2. Previous module is completed
+      let moduleAccessible = false;
+      if (moduleIndex === 0) {
+        moduleAccessible = true;
+      } else if (moduleIndex > 0) {
+        const previousModule = courseModules[moduleIndex - 1];
+        const previousProgress = enrollment.moduleProgress?.find(
+          mp => mp.moduleId.toString() === previousModule._id.toString()
+        );
+        moduleAccessible = previousProgress?.completed ?? false;
+      }
+      
+      return {
+        ...quiz,
+        moduleCompleted: moduleProgress?.completed ?? false,
+        moduleAccessible,
+      };
+    });
   }
 }

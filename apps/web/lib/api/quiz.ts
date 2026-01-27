@@ -18,3 +18,8 @@ export async function getQuizByModule(moduleId: string): Promise<Quiz | null> {
         throw error;
     }
 }
+
+export async function getMyQuizzes(): Promise<Quiz[]> {
+    const { data } = await api.get<Quiz[]>('/quizzes/learner/my-quizzes');
+    return data;
+}
