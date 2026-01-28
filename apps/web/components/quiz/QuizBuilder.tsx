@@ -200,7 +200,7 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     return (
         <div className="h-screen bg-background w-full flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="bg-surface border-b border-border flex-shrink-0 z-10 shadow-sm w-full">
+            <div className="bg-surface border-b border-border shrink-0 z-10 shadow-sm w-full">
                 <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-start justify-between gap-6">
                         {/* Left: Breadcrumb & Title */}

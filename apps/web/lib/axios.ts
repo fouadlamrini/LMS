@@ -29,19 +29,19 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle expired sessions globally
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (typeof window !== "undefined") {
-      if (error?.response?.status === 401) {
-        // Clear expired token and redirect to login
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (typeof window !== "undefined") {
+//       if (error?.response?.status === 401) {
+//         // Clear expired token and redirect to login
+//         localStorage.removeItem("token");
+//         window.location.href = "/login";
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;
 
