@@ -58,5 +58,3 @@ export class Quiz {
   status!: QuizStatus;
 }
 export const QuizSchema = SchemaFactory.createForClass(Quiz);
-
-QuizSchema.index({ moduleId: 1 }, { unique: true });

@@ -15,7 +15,7 @@ async function bootstrap() {
   const uploadsDir = join(__dirname, '..', 'uploads');
   const pdfsDir = join(uploadsDir, 'pdfs');
   const videosDir = join(uploadsDir, 'videos');
-  
+
   if (!existsSync(uploadsDir)) {
     mkdirSync(uploadsDir, { recursive: true });
   }
@@ -60,7 +60,9 @@ async function bootstrap() {
 
   const PORT = process.env.PORT;
   await app.listen(PORT || 3001);
+  console.log('env',process.env.NODE_ENV );
+
+  console.log('Using env file:', `.env.${process.env.NODE_ENV || 'local'}`);
   console.log(`🚀 API running on http://localhost:${PORT}`);
-  
 }
 bootstrap();
