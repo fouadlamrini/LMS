@@ -5,7 +5,6 @@ import { seedAdmin } from './seeders/admin.seeder';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
 import { existsSync, mkdirSync } from 'fs';
 
 async function bootstrap() {
@@ -26,13 +25,9 @@ async function bootstrap() {
     mkdirSync(videosDir, { recursive: true });
   }
 
-  // Enable cookie parsing
-  app.use(cookieParser());
-
   // Enable CORS with credentials
   app.enableCors({
     origin: 'http://localhost:3000', // Next.js frontend URL
-    credentials: true, // Allow cookies
   });
 
   app.setGlobalPrefix('api');
