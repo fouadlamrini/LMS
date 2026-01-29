@@ -108,7 +108,7 @@ export default function TrainerStudentsPage() {
               : 0;
             
             const learnerId = learner._id?.toString() || learner.toString() || '';
-            const learnerName = learner.fullName || 'Unknown';
+            const learnerName = learner.fullName || '';
             const learnerEmail = learner.email || '';
             
             allStudents.push({
