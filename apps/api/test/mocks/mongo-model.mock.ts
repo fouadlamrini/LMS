@@ -4,6 +4,7 @@ export const mockModelFactory = () => ({
     findById: jest.fn().mockReturnThis(),
     findByIdAndUpdate: jest.fn().mockReturnThis(),
     findByIdAndDelete: jest.fn().mockReturnThis(),
+    findOneAndUpdate: jest.fn().mockReturnThis(),
     create: jest.fn(),
     save: jest.fn(),
     exec: jest.fn(),
