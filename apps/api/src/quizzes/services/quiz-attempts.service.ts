@@ -321,9 +321,14 @@ export class QuizAttemptsService {
       })
       .select('title courseId')
       .lean();
+    const totalScore = (quiz.questions ?? []).reduce(
+      (sum, question) => sum + (question.score ?? 0),
+      0,
+    );
     const results = attempts.map(attempt => ({
       ...attempt,
       passingScore: quiz.passingScore,
+      totalScore,
       moduleTitle: course ? course.title : 'Unknown Module',
       courseTitle: course && course.courseId ? (course.courseId as any).title : 'Unknown Course',
     }));

@@ -90,16 +90,27 @@ export default function QuizzesList({ quizzes }: QuizzesListProps) {
             </div>
 
             {hasQuestions ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/learner/quizzes/${quiz._id}`);
-                }}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
-              >
-                Start Quiz
-                <ArrowRight size={16} />
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/learner/quizzes/${quiz._id}`);
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
+                >
+                  Start Quiz
+                  <ArrowRight size={16} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/learner/quizzes/${quiz._id}/attempts`);
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-muted/30 transition-colors text-sm"
+                >
+                  View Attempts
+                </button>
+              </div>
             ) : (
               <div className="text-xs text-muted text-center py-2">
                 No questions available

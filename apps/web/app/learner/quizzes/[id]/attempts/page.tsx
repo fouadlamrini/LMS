@@ -29,6 +29,7 @@ interface AttemptData {
   courseTitle: string;
   moduleTitle: string;
   passingScore: number;
+  totalScore: number;
   submittedAt?: string;
   createdAt: string;
 }
@@ -104,7 +105,8 @@ export default function Page() {
   const courseInfo = attempts.length > 0 ? {
     courseTitle: attempts[0].courseTitle,
     moduleTitle: attempts[0].moduleTitle,
-    passingScore: attempts[0].passingScore
+    passingScore: attempts[0].passingScore,
+    totalScore: attempts[0].totalScore,
   } : null;
 
   return (
@@ -211,6 +213,12 @@ export default function Page() {
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-muted/40" />
             <h3 className="text-xl font-bold text-foreground mb-2">No Attempts Yet</h3>
             <p className="text-muted">You haven't attempted this quiz yet.</p>
+            <button
+              onClick={() => router.push(`/learner/quizzes/${String(quizId)}`)}
+              className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all"
+            >
+              Start Quiz
+            </button>
           </div>
         ) : (
           <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
@@ -222,8 +230,8 @@ export default function Page() {
 
             <div className="divide-y divide-border">
               {attempts.map((attempt, index) => {
-                const percentage = courseInfo
-                  ? Math.round((attempt.score / courseInfo.passingScore) * 100)
+                const percentage = courseInfo?.totalScore
+                  ? Math.round((attempt.score / courseInfo.totalScore) * 100)
                   : 0;
 
                 return (
@@ -262,7 +270,7 @@ export default function Page() {
                             )}
                           </span>
                           {attempt._id === bestAttempt?._id && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-bold">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary text-primary rounded-full text-xs font-bold">
                               <Trophy className="w-3 h-3" />
                               Best
                             </span>
