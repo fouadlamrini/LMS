@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, BookOpen, Loader2, X } from 'lucide-react';
+import { Plus, BookOpen, Loader2, X, Users } from 'lucide-react';
 import { getCourses, createCourse } from '@/lib/api/courses';
 import type { Course } from '@/types';
 
@@ -108,23 +108,34 @@ export default function TrainerCoursesPage() {
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (
-            <li key={c._id}>
+            <li key={c._id} className="group relative flex flex-col rounded-lg border border-border bg-surface hover:border-secondary hover:shadow-md transition-all">
+              {/* Main Course Link */}
               <Link
                 href={`/trainer/courses/${c._id}`}
-                className="block rounded-lg border border-border bg-surface p-5 hover:border-secondary hover:shadow-md transition-all"
+                className="flex-1 p-5"
               >
                 <h2 className="font-semibold text-foreground line-clamp-1">{c.title}</h2>
                 <p className="text-sm text-muted mt-1 line-clamp-2">{c.description ?? '—'}</p>
                 <span
-                  className={`inline-block mt-3 text-xs px-2 py-0.5 rounded ${
-                    c.published
+                  className={`inline-block mt-3 text-xs px-2 py-0.5 rounded ${c.published
                       ? 'bg-success/20 text-success'
                       : 'bg-muted/30 text-muted'
-                  }`}
+                    }`}
                 >
                   {c.published ? 'Published' : 'Draft'}
                 </span>
               </Link>
+
+              {/* Learners Action Bar */}
+              <div className="border-t border-border p-3 bg-muted/5">
+                <Link
+                  href={`/trainer/courses/${c._id}/learners`}
+                  className="inline-flex items-center gap-2 text-sm text-muted hover:text-secondary transition-colors"
+                >
+                  <Users size={16} />
+                  View Learners
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

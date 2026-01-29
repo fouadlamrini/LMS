@@ -5,7 +5,6 @@ import { seedAdmin } from './seeders/admin.seeder';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
 import { existsSync, mkdirSync } from 'fs';
 
 async function bootstrap() {
@@ -15,7 +14,7 @@ async function bootstrap() {
   const uploadsDir = join(__dirname, '..', 'uploads');
   const pdfsDir = join(uploadsDir, 'pdfs');
   const videosDir = join(uploadsDir, 'videos');
-  
+
   if (!existsSync(uploadsDir)) {
     mkdirSync(uploadsDir, { recursive: true });
   }
@@ -26,13 +25,9 @@ async function bootstrap() {
     mkdirSync(videosDir, { recursive: true });
   }
 
-  // Enable cookie parsing
-  app.use(cookieParser());
-
   // Enable CORS with credentials
   app.enableCors({
     origin: 'http://localhost:3000', // Next.js frontend URL
-    credentials: true, // Allow cookies
   });
 
   app.setGlobalPrefix('api');
@@ -60,7 +55,9 @@ async function bootstrap() {
 
   const PORT = process.env.PORT;
   await app.listen(PORT || 3001);
+  console.log('env',process.env.NODE_ENV );
+
+  console.log('Using env file:', `.env.${process.env.NODE_ENV || 'local'}`);
   console.log(`🚀 API running on http://localhost:${PORT}`);
-  
 }
 bootstrap();

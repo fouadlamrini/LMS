@@ -30,6 +30,7 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password);
     } catch (err: any) {
+      console.log("Caught error in component:", err.message);
       setServerError(err.message || "Login failed");
     }
   };
@@ -44,7 +45,7 @@ export default function LoginPage() {
         >
           <div className="flex justify-center mb-8">
             <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-             <LockKeyhole className="w-8 h-8 text-white" />
+              <LockKeyhole className="w-8 h-8 text-white" />
             </div>
           </div>
 

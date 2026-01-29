@@ -15,16 +15,14 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV || 'local'}`, // load correct .env
       validate: (env) => {
-        if (!env.JWT_SECRET) {
-          throw new Error('JWT_SECRET missing');
-        }
-        if (!env.MONGO_URI) {
-          throw new Error('MONGO_URI missing');
-        }
+        if (!env.JWT_SECRET) throw new Error('JWT_SECRET missing');
+        if (!env.MONGO_URI) throw new Error('MONGO_URI missing');
         return env;
       },
     }),
+
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -32,8 +30,6 @@ import { AuthModule } from './auth/auth.module';
       }),
       inject: [ConfigService],
     }),
-
-    // MongooseModule.forRoot(process.env.MONGO_URI as string),
 
     AuthModule,
     UsersModule,
@@ -43,10 +39,9 @@ import { AuthModule } from './auth/auth.module';
     QuizzesModule,
     SeederModule,
     TrainerModule,
-    CoursesModule,
-    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
+
 export class AppModule { }
