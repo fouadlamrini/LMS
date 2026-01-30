@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, Users, BarChart3, Settings, LogOut } from 'lucide-react';
+import { Home, BookOpen, Users, BarChart3, Settings, LogOut, User as UserIcon } from 'lucide-react';
 import { User } from '@/types';
 import LogoutButton from '../auth/LogoutButton';
 
@@ -13,8 +13,7 @@ export default function TrainerSidebar({ user, onClose }: { user: User; onClose?
         { href: '/trainer/dashboard', label: 'Dashboard', icon: Home },
         { href: '/trainer/courses', label: 'My Courses', icon: BookOpen },
         { href: '/trainer/students', label: 'My Students', icon: Users },
-        { href: '/trainer/rapport', label: 'Rapport', icon: BarChart3 },
-        { href: '/trainer/settings', label: 'Settings', icon: Settings },
+        { href: '/trainer/settings', label: 'Profile', icon: UserIcon },
     ];
 
     return (

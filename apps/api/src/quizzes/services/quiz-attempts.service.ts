@@ -292,8 +292,6 @@ export class QuizAttemptsService {
       courseId: new Types.ObjectId(courseId),
     });
     if (!enrollment) throw new NotFoundException('Enrollment not found');
-    console.log('quiz.moduleId', quiz.moduleId);
-    console.log(enrollment);
 
     // 4️⃣ Find the moduleProgress for this quiz
     const moduleProgress = enrollment.moduleProgress.find(

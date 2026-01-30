@@ -54,28 +54,33 @@ export class QuestionsService {
       type === QuestionType.MULTIPLE_CHOICE ||
       type === QuestionType.MULTIPLE_SELECT
     ) {
+      if (correctAnswerText || correctAnswerBoolean !== undefined) {
+        throw new BadRequestException(
+          'Choice questions must not have text or boolean answers',
+        );
+      }
+
       if (!options || options.length < 2) {
         throw new BadRequestException(
           'Choice questions require at least 2 options',
         );
       }
 
-      const correctCount = (options ?? []).filter((o) => o.correct).length;
+      const correctCount = options.filter(o => o.correct).length;
 
       if (type === QuestionType.MULTIPLE_CHOICE && correctCount !== 1) {
-        throw new BadRequestException('Multiple choice questions must have exactly one correct option');
+        throw new BadRequestException(
+          'Multiple choice questions must have exactly one correct option',
+        );
       }
 
       if (type === QuestionType.MULTIPLE_SELECT && correctCount < 1) {
-        throw new BadRequestException('Multiple select questions must have at least one correct option');
-      }
-
-      if (correctAnswerText || correctAnswerBoolean !== undefined) {
         throw new BadRequestException(
-          'Choice questions must not have text or boolean answers',
+          'Multiple select questions must have at least one correct option',
         );
       }
     }
+
   }
   async addQuestion(quizId: string, dto: CreateQuestionDto) {
     const quiz = await this.quizzesService.findOne(quizId);
