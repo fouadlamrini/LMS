@@ -1,173 +1,319 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
-// Hada houwa l-Default Export li Next.js darouri khasso i-l9ah
-export default function Settings() {
-  const [activeTab, setActiveTab] = useState('profile');
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2, User, Lock, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/providers/AuthProvider';
+import api from '@/lib/axios';
+
+export default function LearnerProfilePage() {
   const router = useRouter();
+  const { user, checkAuth } = useAuth();
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const [profileData, setProfileData] = useState({
+    fullName: user?.fullName || '',
+    email: user?.email || '',
+    bio: (user as any)?.bio || '',
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        fullName: user.fullName || '',
+        email: user.email || '',
+        bio: (user as any)?.bio || '',
+      });
+    }
+  }, [user]);
+
+  async function handleUpdateProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await api.patch('/users/me/profile', {
+        fullName: profileData.fullName,
+        bio: profileData.bio,
+      });
+      
+      // Update local state immediately with response data
+      if (response.data) {
+        setProfileData({
+          fullName: response.data.fullName || profileData.fullName,
+          email: response.data.email || profileData.email,
+          bio: response.data.bio || profileData.bio,
+        });
+      }
+      
+      // Refresh global user state to update everywhere (sidebar, etc.)
+      await checkAuth();
+      
+      setSuccess('Profile updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (e: any) {
+      setError(e.response?.data?.message || e.message || 'Error updating profile.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match.');
+      setSaving(false);
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await api.patch('/users/me/password', {
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      
+      setSuccess('Password changed successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (e: any) {
+      setError(e.response?.data?.message || e.message || 'Error changing password.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif', color: '#333' }}>
-      
-      {/* Header: Go Back Button */}
-      <header style={headerStyle}>
-        <button onClick={() => router.back()} style={backButtonStyle}>
-          ← Go Back
-        </button>
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Settings</h1>
-      </header>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Profile Settings</h1>
+        <p className="text-sm sm:text-base text-muted mt-1">Manage your profile information and security</p>
+      </div>
 
-      <div style={{ display: 'flex', flex: 1 }}>
-        
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="rounded-lg border border-error/50 bg-error/10 p-3 sm:p-4 text-error text-xs sm:text-sm flex items-center gap-2">
+          <AlertCircle size={16} className="sm:w-5 sm:h-5 flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-success/50 bg-success/10 p-3 sm:p-4 text-success text-xs sm:text-sm flex items-center gap-2">
+          <CheckCircle2 size={16} className="sm:w-5 sm:h-5 flex-shrink-0" />
+          {success}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
         {/* Sidebar Navigation */}
-        <aside style={sidebarStyle}>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button 
-              onClick={() => setActiveTab('profile')} 
-              style={tabButtonStyle(activeTab === 'profile')}
-            >
-              👤 Update Profile
-            </button>
-            <button 
-              onClick={() => setActiveTab('password')} 
-              style={tabButtonStyle(activeTab === 'password')}
-            >
-              🔑 Change Password
-            </button>
-          </nav>
+        <aside className="lg:col-span-1">
+          <div className="rounded-lg border border-border bg-surface p-3 sm:p-4">
+            <nav className="space-y-1 sm:space-y-2">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all text-left ${
+                  activeTab === 'profile'
+                    ? 'bg-secondary text-white shadow-sm'
+                    : 'text-muted hover:bg-background hover:text-foreground'
+                }`}
+              >
+                <User size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="font-medium text-xs sm:text-sm">Update Profile</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('password')}
+                className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all text-left ${
+                  activeTab === 'password'
+                    ? 'bg-secondary text-white shadow-sm'
+                    : 'text-muted hover:bg-background hover:text-foreground'
+                }`}
+              >
+                <Lock size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="font-medium text-xs sm:text-sm">Change Password</span>
+              </button>
+            </nav>
+          </div>
         </aside>
 
-        {/* Main Content Area */}
-        <main style={{ flex: 1, padding: '40px', backgroundColor: '#fff' }}>
-          {activeTab === 'profile' ? <ProfileForm /> : <PasswordForm />}
-        </main>
+        {/* Main Content */}
+        <main className="lg:col-span-3">
+          <div className="rounded-lg border border-border bg-surface p-4 sm:p-5 lg:p-6">
+            {activeTab === 'profile' ? (
+              <div>
+                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4 sm:mb-6">Personal Information</h2>
+                <form onSubmit={handleUpdateProfile} className="space-y-4 sm:space-y-6">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.fullName}
+                      onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      required
+                    />
+                  </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        disabled
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-muted/10 text-muted text-sm sm:text-base cursor-not-allowed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                        Role
+                      </label>
+                      <input
+                        type="text"
+                        value="Learner"
+                        disabled
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-muted/10 text-muted text-sm sm:text-base cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                      Bio
+                    </label>
+                    <textarea
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                      placeholder="Tell us about yourself..."
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={16} />
+                          Update Profile
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4 sm:mb-6">Security Settings</h2>
+                <form onSubmit={handleChangePassword} className="space-y-4 sm:space-y-6 max-w-md">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-error text-white rounded-lg hover:bg-error/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Changing...
+                        </>
+                      ) : (
+                        <>
+                          <Lock size={16} />
+                          Change Password
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
 }
-
-// --- Component 1: Profile Form ---
-function ProfileForm() {
-  const [formData, setFormData] = useState({
-    fullName: "ayoub jebouri",
-    studentNumber: 7,
-    birthDate: "2005-01-01",
-    specialization: "Full Stack Development",
-    bio: "Kanbghi n3lm web development",
-    email: "ayoub.jebouri@example.com",
-    role: "Student"
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  return (
-    <div style={{ maxWidth: '600px' }}>
-      <h2>Personal Information</h2>
-      <form style={formStyle}>
-        <label style={labelStyle}>Full Name</label>
-        <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} style={inputStyle} />
-
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Email</label>
-            <input type="text" value={formData.email} disabled style={disabledInputStyle} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Role</label>
-            <input type="text" value={formData.role} disabled style={disabledInputStyle} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '15px', marginTop: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Student Number</label>
-            <input type="number" name="studentNumber" value={formData.studentNumber} onChange={handleChange} style={inputStyle} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Birth Date</label>
-            <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} style={inputStyle} />
-          </div>
-        </div>
-
-        <label style={{ ...labelStyle, marginTop: '15px' }}>Specialization</label>
-        <select name="specialization" value={formData.specialization} onChange={handleChange} style={inputStyle}>
-          <option value="Full Stack Development">Full Stack Development</option>
-          <option value="Mobile Development">Mobile Development</option>
-        </select>
-
-        <label style={{ ...labelStyle, marginTop: '15px' }}>Bio</label>
-        <textarea name="bio" value={formData.bio} onChange={handleChange} style={{ ...inputStyle, minHeight: '80px' }} />
-
-        <button type="submit" style={saveButtonStyle}>Update Profile</button>
-      </form>
-    </div>
-  );
-}
-
-// --- Component 2: Password Form ---
-function PasswordForm() {
-  const [passwords, setPasswords] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const handlePassChange = (e) => {
-    const { name, value } = e.target;
-    setPasswords(prev => ({ ...prev, [name]: value }));
-  };
-
-  return (
-    <div style={{ maxWidth: '500px' }}>
-      <h2>Security Settings</h2>
-      <form style={formStyle}>
-        <label style={labelStyle}>Current Password</label>
-        <input 
-          type="password" 
-          name="currentPassword" 
-          placeholder="••••••••"
-          value={passwords.currentPassword}
-          onChange={handlePassChange}
-          style={inputStyle} 
-        />
-
-        <label style={labelStyle}>New Password</label>
-        <input 
-          type="password" 
-          name="newPassword" 
-          placeholder="••••••••"
-          value={passwords.newPassword}
-          onChange={handlePassChange}
-          style={inputStyle} 
-        />
-
-      
-
-        <button type="submit" style={{ ...saveButtonStyle, backgroundColor: '#dc2626' }}>
-          Change Password
-        </button>
-      </form>
-    </div>
-  );
-}
-
-// --- STYLES OBJECTS ---
-const headerStyle = { padding: '15px 30px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '20px', backgroundColor: '#fff' };
-const sidebarStyle = { width: '250px', backgroundColor: '#f8f9fa', padding: '30px 20px', borderRight: '1px solid #eee' };
-const backButtonStyle = { padding: '8px 15px', borderRadius: '20px', border: 'none', cursor: 'pointer', backgroundColor: '#ececec', fontWeight: 'bold' };
-const inputStyle = { width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' };
-const disabledInputStyle = { ...inputStyle, backgroundColor: '#f0f0f0', color: '#888', cursor: 'not-allowed' };
-const labelStyle = { fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', display: 'block' };
-const saveButtonStyle = { padding: '12px', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' };
-const formStyle = { display: 'flex', flexDirection: 'column', marginTop: '20px' };
-
-const tabButtonStyle = (isActive) => ({
-  padding: '12px', textAlign: 'left', border: 'none', borderRadius: '8px', cursor: 'pointer',
-  backgroundColor: isActive ? '#0070f3' : 'transparent', color: isActive ? 'white' : '#333',
-  fontWeight: isActive ? 'bold' : 'normal', transition: '0.2s'
-});

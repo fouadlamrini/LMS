@@ -43,7 +43,7 @@ export class TrainerService {
     await this.verifyCourseOwnership(courseId, trainerId);
     const enrollments = await this.enrollmentModel
       .find({ courseId: new Types.ObjectId(courseId) })
-      .populate('learnerId', 'name email role');
+      .populate('learnerId', 'name email');
     return enrollments;
   }
 

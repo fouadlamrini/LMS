@@ -14,7 +14,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { CourseModulesService } from './course-modules.service';
 import { CreateCourseModuleDto } from './dto/create-course-module.dto';
 import { UpdateCourseModuleDto } from './dto/update-course-module.dto';
@@ -59,6 +60,12 @@ export class CourseModulesController {
         destination: (req, file, callback) => {
           const isPdf = file.mimetype === 'application/pdf';
           const dest = isPdf ? './uploads/pdfs' : './uploads/videos';
+          
+          // Create directory if it doesn't exist
+          if (!existsSync(dest)) {
+            mkdirSync(dest, { recursive: true });
+          }
+          
           callback(null, dest);
         },
         filename: (req, file, callback) => {
@@ -109,10 +116,69 @@ export class CourseModulesController {
 
   @Patch(':moduleId/content/:contentId')
   @Roles(Role.TRAINER)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, file, callback) => {
+          if (!file) {
+            callback(null, './uploads');
+            return;
+          }
+          const isPdf = file.mimetype === 'application/pdf';
+          const dest = isPdf ? './uploads/pdfs' : './uploads/videos';
+          
+          // Create directory if it doesn't exist
+          if (!existsSync(dest)) {
+            mkdirSync(dest, { recursive: true });
+          }
+          
+          callback(null, dest);
+        },
+        filename: (req, file, callback) => {
+          if (!file) {
+            callback(null, '');
+            return;
+          }
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file) {
+          callback(null, true);
+          return;
+        }
+        const allowedMimeTypes = [
+          'application/pdf',
+          'video/mp4',
+          'video/webm',
+          'video/avi',
+          'video/quicktime',
+          'video/x-msvideo',
+        ];
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException(
+              'Only PDF and Video files (mp4, webm, avi, mov) are allowed',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 500 * 1024 * 1024, // 500MB max (for videos)
+      },
+    }),
+  )
   updateContent(
     @Param('moduleId') moduleId: string,
     @Param('contentId') contentId: string,
     @Body() updateContentDto: UpdateContentDto,
+    @UploadedFile() file: Express.Multer.File,
     @Request() req: any,
   ) {
     return this.courseModulesService.updateContent(
@@ -120,6 +186,7 @@ export class CourseModulesController {
       contentId,
       updateContentDto,
       req.user.userId,
+      file,
     );
   }
 

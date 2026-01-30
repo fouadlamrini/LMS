@@ -191,7 +191,7 @@ export class CourseSeeder {
 
     const fullTypesQuiz = await this.quizModel.create({
       moduleId: webModule1._id,
-      passingScore: 70,
+      passingScore: 20,
       status: QuizStatus.PUBLISHED,
       questions: [
         // 1️⃣ Multiple choice (single correct)

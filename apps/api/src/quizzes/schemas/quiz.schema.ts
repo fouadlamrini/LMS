@@ -26,7 +26,7 @@ export class Question {
   @Prop({ required: true })
   text!: string;
 
-  @Prop({ required: true, enum: QuestionType })
+  @Prop({ required: true, enum: QuestionType, type: String })
   type!: QuestionType;
 
   @Prop({ type: [OptionSchema], default: undefined })
@@ -45,7 +45,7 @@ export const QuestionSchema = SchemaFactory.createForClass(Question);
 
 @Schema({ timestamps: true, collection: 'quizzes' })
 export class Quiz {
-  @Prop({ type: Types.ObjectId, ref: 'CourseModule', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'CourseModule', required: true, unique: true })
   moduleId!: Types.ObjectId;
 
   @Prop({ type: [QuestionSchema], default: [] })
@@ -54,7 +54,7 @@ export class Quiz {
   @Prop({ required: true, default: 0 })
   passingScore!: number;
 
-  @Prop({ enum: QuizStatus, default: QuizStatus.DRAFT })
+  @Prop({ enum: QuizStatus, default: QuizStatus.DRAFT, type: String })
   status!: QuizStatus;
 }
 export const QuizSchema = SchemaFactory.createForClass(Quiz);

@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  isInitialLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,8 +22,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Helper: Redirect user based on their role
   const navigateByRole = useCallback((role: Role) => {
@@ -44,23 +46,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = useCallback(async () => {
     const storedToken = localStorage.getItem('token');
     if (!storedToken) {
-      setIsLoading(false);
+      setIsInitialLoading(false); // Finish initial check
       return;
     }
-
     try {
       setToken(storedToken);
       const { data } = await api.get('/auth/me');
       setUser(data);
-
-      // Only auto-redirect if specifically on the login page during mount
-      if (window.location.pathname === '/login') {
-        navigateByRole(data.role);
-      }
     } catch (error) {
       clearAuth();
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false); // Finish initial check
     }
   }, [navigateByRole, clearAuth]);
 
@@ -72,21 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const { data } = await api.post('/auth/login', { email, password });
-
       if (!data.access_token) throw new Error(data.message || 'Login failed');
 
       localStorage.setItem('token', data.access_token);
       setToken(data.access_token);
 
-      // Fetch fresh user data
       const { data: userData } = await api.get('/auth/me');
-
       setUser(userData);
-
       navigateByRole(userData.role);
     } catch (error: any) {
-      clearAuth();
-      throw new Error(error.response?.data?.message || 'Connection error');
+      const message = error.response?.data?.message || error.message || 'Connection error';
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         checkAuth,
+        isInitialLoading,
       }}
     >
       {children}

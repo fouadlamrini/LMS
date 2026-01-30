@@ -44,7 +44,11 @@ export default function QuestionEditor({ question, onSave, onChange, isDirty = f
         };
 
         if (localQuestion.type === QuestionType.MULTIPLE_CHOICE || localQuestion.type === QuestionType.MULTIPLE_SELECT) {
-            payload.options = localQuestion.options;
+            // Remove _id from options as backend doesn't expect it
+            payload.options = localQuestion.options?.map(opt => ({
+                text: opt.text,
+                correct: opt.correct
+            }));
         } else if (localQuestion.type === QuestionType.TRUE_FALSE) {
             payload.correctAnswerBoolean = localQuestion.correctAnswerBoolean;
         } else if (localQuestion.type === QuestionType.SHORT_ANSWER) {

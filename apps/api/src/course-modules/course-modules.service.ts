@@ -19,9 +19,6 @@ import {
 } from 'src/enrollments/schemas/enrollment.schema';
 import { SaveResumeDto } from './dto/save-resume.dto';
 
-type ModuleProgressWithResume = ModuleProgress & {
-  resume: NonNullable<ModuleProgress['resume']>;
-};
 
 @Injectable()
 export class CourseModulesService {
@@ -30,7 +27,7 @@ export class CourseModulesService {
     @InjectModel(Enrollment.name)
     private enrollmentModel: Model<EnrollmentDocument>,
     private coursesService: CoursesService,
-  ) {}
+  ) { }
 
   async create(
     createModuleDto: CreateCourseModuleDto,
@@ -95,8 +92,13 @@ export class CourseModulesService {
         })
         .lean();
 
+      // If not enrolled, return modules with accessible: false (locked)
       if (!enrollment) {
-        throw new ForbiddenException('Not enrolled in this course');
+        return modules.map((mod) => ({
+          ...mod,
+          accessible: false, // All modules locked if not enrolled
+          completed: false,
+        }));
       }
 
       let previousCompleted = true;
@@ -265,6 +267,7 @@ export class CourseModulesService {
     contentId: string,
     updateContentDto: UpdateContentDto,
     trainerId: string,
+    file?: Express.Multer.File,
   ): Promise<CourseModule> {
     const module = await this.findOne(moduleId);
     const course = await this.coursesService.findOne(
@@ -288,14 +291,36 @@ export class CourseModulesService {
       );
     }
 
+    // Determine new type (use updated type or keep current)
+    const newType = updateContentDto.type || content.type;
+
+    // Determine new URL
+    let newUrl = updateContentDto.url || content.url;
+
+    // If file is uploaded, use it
+    if (file) {
+      if (newType === 'pdf') {
+        newUrl = `/uploads/pdfs/${file.filename}`;
+      } else if (newType === 'video') {
+        newUrl = `/uploads/videos/${file.filename}`;
+      }
+    } else if (newType !== content.type) {
+      // Type changed but no file provided - keep URL if it's a video URL, otherwise require file
+      if (newType === 'pdf' && !file) {
+        throw new BadRequestException('PDF file upload is required when changing to PDF type');
+      }
+      // If changing from PDF to video and no file/URL provided, keep current URL (might be invalid)
+    }
+
     // Update content fields
     const updatedModule = await this.moduleModel
       .findOneAndUpdate(
         { _id: moduleId, 'contents._id': new Types.ObjectId(contentId) },
         {
           $set: {
-            'contents.$.title': updateContentDto.title || content.title,
-            'contents.$.url': updateContentDto.url || content.url,
+            'contents.$.title': updateContentDto.title !== undefined ? updateContentDto.title : content.title,
+            'contents.$.url': newUrl,
+            'contents.$.type': newType,
           },
         },
         { new: true },
@@ -346,13 +371,7 @@ export class CourseModulesService {
   }
 
   async getCourseResume(courseId: string, learnerId: string) {
-    // check if course exits or enroled in
-    const course = await this.coursesService.findOne(courseId);
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${courseId} not found`);
-    }
-
-    // Get enrollment
+    // 1. Get the enrollment and its top-level resume
     const enrollment = await this.enrollmentModel
       .findOne({
         courseId: new Types.ObjectId(courseId),
@@ -361,42 +380,27 @@ export class CourseModulesService {
       })
       .lean();
 
-    if (!enrollment)
+    if (!enrollment) {
       throw new NotFoundException('No active enrollment found for this course');
+    }
 
-    // Find last module with resume
-    const last = enrollment.moduleProgress
-      .filter(
-        (mp): mp is ModuleProgressWithResume =>
-          mp.resume !== undefined && mp.resume !== null,
-      )
-      .sort(
-        (a, b) =>
-          new Date(b.resume.updatedAt).getTime() -
-          new Date(a.resume.updatedAt).getTime(),
-      )[0];
-
-    if (last) {
-      // Return last watched content
+    // 2. If a resume exists, return it
+    if (enrollment.resume) {
       return {
-        moduleId: last.moduleId,
-        contentId: last.resume.contentId,
-        position: last.resume.position,
+        moduleId: enrollment.resume.moduleId, // Ensure you add moduleId to ResumeState or the save logic below
+        contentId: enrollment.resume.contentId,
+        position: enrollment.resume.position,
       };
     }
 
-    // Fallback: first module & first content
+    // 3. Fallback: Find the very first module and first content
     const firstModule = await this.moduleModel
       .findOne({ courseId: new Types.ObjectId(courseId) })
       .sort({ order: 1 })
       .lean();
 
-    if (
-      !firstModule ||
-      !firstModule.contents ||
-      firstModule.contents.length === 0
-    ) {
-      return null; // no content in course
+    if (!firstModule || !firstModule.contents?.length) {
+      return null;
     }
 
     return {
@@ -406,79 +410,48 @@ export class CourseModulesService {
     };
   }
 
-  async saveCourseResume(
-    courseId: string,
-    learnerId: string,
-    dto: SaveResumeDto,
-  ) {
-    // check if course exits or enroled in
-    const course = await this.coursesService.findOne(courseId);
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${courseId} not found`);
-    }
+  async saveCourseResume(courseId: string, learnerId: string, dto: SaveResumeDto) {
+    // 1. Validation: Does the enrollment exist?
+    const enrollment = await this.enrollmentModel.findOne({
+      courseId: new Types.ObjectId(courseId),
+      learnerId: new Types.ObjectId(learnerId),
+      status: 'active',
+    });
 
-    // Get enrollment
-    const enrollment = await this.enrollmentModel
-      .findOne({
-        courseId: new Types.ObjectId(courseId),
-        learnerId: new Types.ObjectId(learnerId),
-        status: 'active',
-      })
-      .lean();
-
-    if (!enrollment)
+    if (!enrollment) {
       throw new NotFoundException('No active enrollment found for this course');
+    }
 
-    // check module exists in course
-    const module = await this.moduleModel
-      .findOne({
-        _id: dto.moduleId,
-        courseId: new Types.ObjectId(courseId),
-      })
-      .lean();
+    // 2. Validation: Does the module and content actually belong to this course?
+    const module = await this.moduleModel.findOne({
+      _id: dto.moduleId,
+      courseId: new Types.ObjectId(courseId),
+    }).lean();
+
     if (!module) {
-      throw new NotFoundException(
-        `Module with ID ${dto.moduleId} not found in this course`,
-      );
+      throw new NotFoundException('Module not found in this course');
     }
 
-    // check if content exists in module
-    const content = module.contents.find(
-      (c: any) => c._id.toString() === dto.contentId,
-    );
-    if (!content) {
-      throw new NotFoundException(
-        `Content with ID ${dto.contentId} not found in this module`,
-      );
+    const contentExists = module.contents.some(c => c._id.toString() === dto.contentId);
+    if (!contentExists) {
+      throw new NotFoundException('Content not found in this module');
     }
 
-    // Update or add resume in moduleProgress
-    const updated = await this.enrollmentModel
-      .findOneAndUpdate(
-        {
-          courseId: new Types.ObjectId(courseId),
-          learnerId: new Types.ObjectId(learnerId),
-          status: 'active',
-          'moduleProgress.moduleId': new Types.ObjectId(dto.moduleId),
-        },
-        {
-          $set: {
-            'moduleProgress.$.resume': {
-              contentId: new Types.ObjectId(dto.contentId),
-              position: dto.position,
-              updatedAt: new Date(),
-            },
+    // 3. Update the single top-level resume field
+    const updated = await this.enrollmentModel.findOneAndUpdate(
+      { _id: enrollment._id },
+      {
+        $set: {
+          resume: {
+            moduleId: new Types.ObjectId(dto.moduleId), // Storing this is key for your Frontend button
+            contentId: new Types.ObjectId(dto.contentId),
+            position: dto.position,
+            updatedAt: new Date(),
           },
         },
-        { new: true },
-      )
-      .exec();
-
-    if (!updated) {
-      throw new NotFoundException(
-        'Module progress not found for this enrollment',
-      );
-    }
+      },
+      { new: true }
+    ).exec();
 
     return updated;
   }
