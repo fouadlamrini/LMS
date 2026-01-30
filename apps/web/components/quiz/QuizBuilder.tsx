@@ -25,6 +25,7 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
     const [showPreview, setShowPreview] = useState<boolean>(false);
     const [passingScore, setPassingScore] = useState<number>(initialQuiz.passingScore);
+    const [passingScoreError, setPassingScoreError] = useState<string>('');
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [dirtyIndices, setDirtyIndices] = useState<Set<number>>(new Set());
     const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
@@ -35,13 +36,21 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
         return hasTemp || hasDirty;
     }, [quiz?.questions, dirtyIndices]);
 
+    const totalScore = quiz.questions.reduce((sum, q) => sum + (q.score || 0), 0);
+
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
-            updatePassingScore();
+            if (passingScore <= totalScore) {
+                updatePassingScore();
+                setPassingScoreError('');
+            }
+            else {
+                setPassingScoreError('Passing score cannot exceed total score');
+            }
         }, 500);
 
         return () => clearTimeout(delayDebounce);
-    }, [passingScore]);
+    }, [passingScore, totalScore]);
 
     const persistQuestionUpdate = async (index: number, updates: Partial<Question>) => {
         if (!quiz) return;
@@ -195,8 +204,6 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
         }
     };
 
-    const totalScore = quiz.questions.reduce((sum, q) => sum + (q.score || 0), 0);
-
     return (
         <div className="h-screen bg-background w-full flex flex-col overflow-hidden">
             {/* Header */}
@@ -322,6 +329,9 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                                         Default
                                     </button>
                                 </div>
+                                {passingScoreError && (
+                                    <p className="text-xs text-error mt-1">{passingScoreError}</p>
+                                )}
                             </div>
                             <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
                                 <span className="text-success text-lg font-bold">
