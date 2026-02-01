@@ -1,26 +1,62 @@
 name: lms
+
 services:
   api:
     container_name: lms_api
-    build: ./apps/api
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
     env_file:
       - ./apps/api/.env.production
     ports:
       - "3001:3001"
     networks:
       - lms_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   web:
     container_name: lms_web
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
     env_file:
       - ./apps/web/.env.production
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - lms_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
 networks:
   lms_network:
