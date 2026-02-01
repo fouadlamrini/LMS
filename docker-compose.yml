@@ -3,46 +3,24 @@ services:
   api:
     container_name: lms_api
     build: ./apps/api
-    ports:
-      - "3001:3001"
     env_file:
       - ./apps/api/.env.production
-    volumes:
-      - ./apps/api:/app
-      - /app/node_modules
-    depends_on:
-      - mongo
+    ports:
+      - "3001:3001"
     networks:
       - lms_network
 
   web:
     container_name: lms_web
     build: ./apps/web
+    env_file:
+      - ./apps/web/.env.production
     ports:
       - "3000:3000"
-    env_file:
-      - ./apps/web/.env
-    volumes:
-      - ./apps/web:/app
-      - /app/node_modules
     depends_on:
       - api
     networks:
       - lms_network
-
-  mongo:
-    container_name: lms_mongo
-    image: mongo:7
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - lms_network
-
-volumes:
-  mongo_data:
 
 networks:
   lms_network:
