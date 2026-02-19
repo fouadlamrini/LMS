@@ -1,8 +1,8 @@
 // lib/axios.ts
 import axios from "axios";
-if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === "production") {
-  console.error("NEXT_PUBLIC_API_URL is missing!");
-}
+
+console.log(process.env.NEXT_PUBLIC_API_URL);
+
 const api = axios.create({
   baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") + "/api",
   headers: {

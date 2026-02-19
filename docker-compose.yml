@@ -1,49 +1,63 @@
 name: lms
+
 services:
   api:
     container_name: lms_api
-    build: ./apps/api
-    ports:
-      - "3001:3001"
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
     env_file:
       - ./apps/api/.env.production
-    volumes:
-      - ./apps/api:/app
-      - /app/node_modules
-    depends_on:
-      - mongo
+    ports:
+      - "3001:3001"
     networks:
       - lms_network
+    restart: unless-stopped
+    # PERSISTENCE: Save your uploads outside the container
+    volumes:
+      - lms_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"] # Adjust to your health route
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   web:
     container_name: lms_web
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/web/.env.production
     ports:
       - "3000:3000"
-    env_file:
-      - ./apps/web/.env
-    volumes:
-      - ./apps/web:/app
-      - /app/node_modules
+    networks:
+      - lms_network
+    restart: unless-stopped
     depends_on:
-      - api
-    networks:
-      - lms_network
-
-  mongo:
-    container_name: lms_mongo
-    image: mongo:7
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - lms_network
-
-volumes:
-  mongo_data:
+      api:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
 networks:
   lms_network:
     driver: bridge
+
+# Named volume for uploads
+volumes:
+  lms_uploads:
