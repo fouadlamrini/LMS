@@ -1,18 +1,9 @@
-// lib/axios.ts
 import axios from "axios";
 
-// Get API URL at runtime instead of build time
-function getApiUrl() {
-  if (typeof window !== "undefined") {
-    // Client-side: check if there's a runtime config
-    return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001");
-  }
-  // Server-side fallback
-  return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001");
-}
+console.log(process.env.NEXT_PUBLIC_API_URL);
 
 const api = axios.create({
-  baseURL: getApiUrl() + "/api",
+  baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") + "/api",
   headers: {
     "Content-Type": "application/json"
   },
@@ -37,8 +28,6 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
-
 
 export default api;
 
