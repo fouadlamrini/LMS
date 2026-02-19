@@ -1,7 +1,10 @@
 // lib/axios.ts
 import axios from "axios";
+console.log('hi from axios file');
 
 console.log(process.env.NEXT_PUBLIC_API_URL);
+console.log('.....');
+
 
 const api = axios.create({
   baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") + "/api",
