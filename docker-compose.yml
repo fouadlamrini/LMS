@@ -1,40 +1,63 @@
-version: "3.9"
+name: lms
 
 services:
   api:
     container_name: lms_api
-    build: ./apps/api
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
     env_file:
       - ./apps/api/.env.production
     ports:
       - "3001:3001"
-    volumes:
-      - lms_uploads:/app/uploads
-    restart: unless-stopped
     networks:
       - lms_network
+    restart: unless-stopped
+    # PERSISTENCE: Save your uploads outside the container
+    volumes:
+      - lms_uploads:/app/uploads
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"] # Adjust to your health route
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   web:
     container_name: lms_web
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
     env_file:
       - ./apps/web/.env.production
     ports:
       - "3000:3000"
-    restart: unless-stopped
     networks:
       - lms_network
+    restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
 networks:
   lms_network:
     driver: bridge
 
+# Named volume for uploads
 volumes:
   lms_uploads:
