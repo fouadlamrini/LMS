@@ -7,10 +7,8 @@ import { useAuth } from '@/providers/AuthProvider';
 import api from '@/lib/axios';
 
 export default function TrainerSettingsPage() {
-  const router = useRouter();
   const { user, checkAuth } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -119,14 +117,14 @@ export default function TrainerSettingsPage() {
       {/* Error/Success Messages */}
       {error && (
         <div className="rounded-lg border border-error/50 bg-error/10 p-3 sm:p-4 text-error text-xs sm:text-sm flex items-center gap-2">
-          <AlertCircle size={16} className="sm:w-5 sm:h-5 flex-shrink-0" />
+          <AlertCircle size={16} className="sm:w-5 sm:h-5 shrink-0" />
           {error}
         </div>
       )}
 
       {success && (
         <div className="rounded-lg border border-success/50 bg-success/10 p-3 sm:p-4 text-success text-xs sm:text-sm flex items-center gap-2">
-          <CheckCircle2 size={16} className="sm:w-5 sm:h-5 flex-shrink-0" />
+          <CheckCircle2 size={16} className="sm:w-5 sm:h-5 shrink-0" />
           {success}
         </div>
       )}
@@ -144,7 +142,7 @@ export default function TrainerSettingsPage() {
                     : 'text-muted hover:bg-background hover:text-foreground'
                 }`}
               >
-                <User size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                <User size={18} className="sm:w-5 sm:h-5 shrink-0" />
                 <span className="font-medium text-xs sm:text-sm">Update Profile</span>
               </button>
               <button
@@ -155,7 +153,7 @@ export default function TrainerSettingsPage() {
                     : 'text-muted hover:bg-background hover:text-foreground'
                 }`}
               >
-                <Lock size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                <Lock size={18} className="sm:w-5 sm:h-5 shrink-0" />
                 <span className="font-medium text-xs sm:text-sm">Change Password</span>
               </button>
             </nav>

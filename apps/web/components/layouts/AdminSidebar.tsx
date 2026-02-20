@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, BookOpen, Shield, Settings, LogOut } from 'lucide-react';
+import { Home, Users, BookOpen, Shield, Settings } from 'lucide-react';
 import { User } from '@/types';
 import LogoutButton from '../auth/LogoutButton';
 
@@ -28,7 +28,7 @@ export default function AdminSidebar({ user, onClose }: { user: User; onClose?: 
             {/* User Info */}
             <div className="p-3 sm:p-4 border-b border-border">
                 <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-error/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-error/20 flex items-center justify-center shrink-0">
                         <Shield size={18} className="sm:w-5 sm:h-5 text-secondary" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -55,7 +55,7 @@ export default function AdminSidebar({ user, onClose }: { user: User; onClose?: 
                                         : 'text-muted hover:bg-background hover:text-foreground'
                                         }`}
                                 >
-                                    <Icon size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                                    <Icon size={18} className="sm:w-5 sm:h-5 shrink-0" />
                                     <span className="font-medium text-xs sm:text-sm">{link.label}</span>
                                 </Link>
                             </li>

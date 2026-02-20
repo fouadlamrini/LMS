@@ -359,9 +359,9 @@ export default function LearnerModuleContentPage() {
                 >
                   <div className="flex items-center gap-3">
                     {c.type === 'pdf' ? (
-                      <FileText className="flex-shrink-0 text-muted" size={20} />
+                      <FileText className="shrink-0 text-muted" size={20} />
                     ) : (
-                      <Video className="flex-shrink-0 text-muted" size={20} />
+                      <Video className="shrink-0 text-muted" size={20} />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{c.title || 'Untitled'}</p>
@@ -385,7 +385,7 @@ export default function LearnerModuleContentPage() {
               height: '80vh'
             }}
           >
-            <div className="flex justify-between items-center p-4 border-b border-border flex-shrink-0">
+            <div className="flex justify-between items-center p-4 border-b border-border shrink-0">
               <h2 className="text-xl font-bold text-foreground">{viewingContent.title || 'Content'}</h2>
               <button
                 onClick={() => setViewingContent(null)}

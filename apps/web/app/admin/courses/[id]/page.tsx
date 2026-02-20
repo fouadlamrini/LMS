@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Trash2, BookOpen, Loader2, Layers, X, User, Eye, ExternalLink, FileText, Video, CircleQuestionMark } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, Layers, Eye, ExternalLink, FileText, Video, CircleQuestionMark, X } from 'lucide-react';
 import { getCourse, deleteCourse } from '@/lib/api/courses';
 import { getModulesByCourse } from '@/lib/api/course-modules';
 import { getQuizByModule } from '@/lib/api/quiz';
@@ -88,7 +88,7 @@ export default function AdminCourseDetailPage() {
 
   if (loading || !course) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
+      <div className="flex items-center justify-center min-h-50">
         {loading ? (
           <Loader2 className="w-8 h-8 animate-spin text-muted" />
         ) : error ? (
@@ -108,7 +108,7 @@ export default function AdminCourseDetailPage() {
         href="/admin/courses"
         className="inline-flex items-center gap-2 text-xs sm:text-sm text-muted hover:text-foreground mb-4 sm:mb-6"
       >
-        <ArrowLeft size={16} className="sm:w-[18px] sm:h-[18px]" />
+        <ArrowLeft size={16} className="sm:w-4.5 sm:h-4.5" />
         Back to courses
       </Link>
 
@@ -120,7 +120,7 @@ export default function AdminCourseDetailPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground break-words">{course.title}</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground wrap-break-words">{course.title}</h1>
           <span
             className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
               course.published ? 'bg-success/20 text-success' : 'bg-muted/30 text-muted'
@@ -144,7 +144,7 @@ export default function AdminCourseDetailPage() {
       {/* Description */}
       <div className="rounded-lg border border-border bg-surface p-4 sm:p-5 lg:p-6 mb-6 sm:mb-8">
         <h2 className="text-xs sm:text-sm font-medium text-muted mb-2">Description</h2>
-        <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words">{course.description ?? '—'}</p>
+        <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap wrap-break-words">{course.description ?? '—'}</p>
       </div>
 
       {/* Modules */}
@@ -171,7 +171,7 @@ export default function AdminCourseDetailPage() {
                 key={module._id}
                 className="flex items-center gap-2 sm:gap-3 rounded-lg border border-border bg-surface p-3 sm:p-4"
               >
-                <span className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
+                <span className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
                   {index + 1}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -180,7 +180,7 @@ export default function AdminCourseDetailPage() {
                     {module.contents?.length ?? 0} content(s) {module.quizId ? '· Quiz' : ''}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {module.quizId && (
                     <button
                       onClick={() => handleViewQuiz(module._id)}
@@ -247,14 +247,14 @@ export default function AdminCourseDetailPage() {
       {viewingModule && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="bg-surface rounded-xl border border-border shadow-2xl w-full h-full sm:w-[90%] sm:h-[90%] lg:w-[75%] lg:h-[75%] max-w-[90vw] max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border flex-shrink-0">
+            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border shrink-0">
               <h2 className="text-lg sm:text-xl font-bold text-foreground truncate pr-2">{viewingModule.title}</h2>
               <button
                 onClick={() => {
                   setViewingModule(null);
                   setViewingContent(null);
                 }}
-                className="text-muted hover:text-foreground transition-colors flex-shrink-0"
+                className="text-muted hover:text-foreground transition-colors shrink-0"
               >
                 <X size={20} className="sm:w-6 sm:h-6" />
               </button>
@@ -271,9 +271,9 @@ export default function AdminCourseDetailPage() {
                       >
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                           {content.type === 'pdf' ? (
-                            <FileText className="flex-shrink-0 text-muted w-4 h-4 sm:w-5 sm:h-5" />
+                            <FileText className="shrink-0 text-muted w-4 h-4 sm:w-5 sm:h-5" />
                           ) : (
-                            <Video className="flex-shrink-0 text-muted w-4 h-4 sm:w-5 sm:h-5" />
+                            <Video className="shrink-0 text-muted w-4 h-4 sm:w-5 sm:h-5" />
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="text-sm sm:text-base font-medium text-foreground truncate">{content.title || 'Untitled'}</p>
@@ -303,11 +303,11 @@ export default function AdminCourseDetailPage() {
       {viewingContent && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="bg-surface rounded-xl border border-border shadow-2xl w-full h-full sm:w-[90%] sm:h-[90%] lg:w-[75%] lg:h-[75%] max-w-[90vw] max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border flex-shrink-0">
+            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border shrink-0">
               <h2 className="text-lg sm:text-xl font-bold text-foreground truncate pr-2">{viewingContent.title || 'Content'}</h2>
               <button
                 onClick={() => setViewingContent(null)}
-                className="text-muted hover:text-foreground transition-colors flex-shrink-0"
+                className="text-muted hover:text-foreground transition-colors shrink-0"
               >
                 <X size={20} className="sm:w-6 sm:h-6" />
               </button>
@@ -316,7 +316,7 @@ export default function AdminCourseDetailPage() {
               {viewingContent.type === 'pdf' ? (
                 <iframe
                   src={getContentUrl(viewingContent.url)}
-                  className="w-full h-full min-h-[300px] sm:min-h-[500px] rounded border border-border"
+                  className="w-full h-full min-h-75 sm:min-h-125 rounded border border-border"
                   title={viewingContent.title || 'PDF Content'}
                 />
               ) : (
@@ -324,7 +324,7 @@ export default function AdminCourseDetailPage() {
                   {viewingContent.url.includes('youtube.com') || viewingContent.url.includes('youtu.be') ? (
                     <iframe
                       src={viewingContent.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
-                      className="w-full h-full min-h-[300px] sm:min-h-[500px] rounded border border-border"
+                      className="w-full h-full min-h-75 sm:min-h-125 rounded border border-border"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       title={viewingContent.title || 'Video Content'}
@@ -332,7 +332,7 @@ export default function AdminCourseDetailPage() {
                   ) : viewingContent.url.includes('vimeo.com') ? (
                     <iframe
                       src={`https://player.vimeo.com/video/${viewingContent.url.split('/').pop()}`}
-                      className="w-full h-full min-h-[300px] sm:min-h-[500px] rounded border border-border"
+                      className="w-full h-full min-h-75 sm:min-h-125 rounded border border-border"
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen
                       title={viewingContent.title || 'Video Content'}
@@ -357,7 +357,7 @@ export default function AdminCourseDetailPage() {
       {viewingQuiz && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="bg-surface rounded-xl border border-border shadow-2xl w-full h-full sm:w-[90%] sm:h-[90%] lg:w-[75%] lg:h-[75%] max-w-[90vw] max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border flex-shrink-0">
+            <div className="flex justify-between items-center p-3 sm:p-4 border-b border-border shrink-0">
               <div className="min-w-0 flex-1 pr-2">
                 <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">Quiz Details</h2>
                 <p className="text-xs sm:text-sm text-muted mt-1 truncate">
@@ -366,7 +366,7 @@ export default function AdminCourseDetailPage() {
               </div>
               <button
                 onClick={() => setViewingQuiz(null)}
-                className="text-muted hover:text-foreground transition-colors flex-shrink-0"
+                className="text-muted hover:text-foreground transition-colors shrink-0"
               >
                 <X size={20} className="sm:w-6 sm:h-6" />
               </button>
@@ -411,7 +411,7 @@ export default function AdminCourseDetailPage() {
                         className="rounded-lg border border-border bg-surface p-3 sm:p-4"
                       >
                         <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
-                          <span className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
+                          <span className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
                             {index + 1}
                           </span>
                           <div className="flex-1 min-w-0">

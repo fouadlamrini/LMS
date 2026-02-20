@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data } = await api.get('/auth/me');
       setUser(data);
     } catch (error) {
+      console.error(error);
       clearAuth();
     } finally {
       setIsInitialLoading(false); // Finish initial check

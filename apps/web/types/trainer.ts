@@ -1,4 +1,4 @@
-interface Learner {
+export interface Learner {
   _id: string;
   learnerId: {
     _id: string;

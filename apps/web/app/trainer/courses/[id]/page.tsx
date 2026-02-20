@@ -201,7 +201,7 @@ export default function CourseDetailPage() {
                 key={module._id}
                 className="flex items-center gap-2 sm:gap-3 rounded-lg border border-border bg-surface p-3 sm:p-4"
               >
-                <span className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
+                <span className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs sm:text-sm font-semibold">
                   {index + 1}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -210,7 +210,7 @@ export default function CourseDetailPage() {
                     {module.contents?.length ?? 0} content(s) {module.quizId ? '· Quiz' : ''}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Link
                     href={`/trainer/courses/${id}/modules/${module._id}`}
                     className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-border rounded-lg hover:bg-surface text-xs sm:text-sm"

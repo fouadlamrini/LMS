@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { CircleQuestionMark, CheckCircle2, BookOpen, ArrowRight } from 'lucide-react';
 import type { Quiz } from '@/types';
 

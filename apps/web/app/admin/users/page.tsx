@@ -210,8 +210,8 @@ export default function UsersPage() {
             <tbody className="divide-y divide-border">
               {users.map((user) => (
                 <tr key={user._id} className="hover:bg-background transition-colors">
-                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-foreground break-words">{user.fullName}</td>
-                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-muted break-words">{user.email}</td>
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-foreground wrap-break-words">{user.fullName}</td>
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-muted wrap-break-words">{user.email}</td>
                   <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
                     <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase whitespace-nowrap ${
                       user.role === Role.ADMIN 
@@ -228,7 +228,7 @@ export default function UsersPage() {
                       href={`/admin/users/${user._id}`}
                       className="inline-flex items-center gap-1.5 sm:gap-2 text-success hover:text-success/80 font-bold hover:underline transition-colors"
                     >
-                      <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Eye size={16} className="sm:w-4.5 sm:h-4.5" />
                       <span className="hidden sm:inline">Review</span>
                     </Link>
                   </td>

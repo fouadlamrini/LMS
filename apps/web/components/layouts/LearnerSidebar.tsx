@@ -30,7 +30,7 @@ export default function LearnerSidebar({ user, onClose }: { user: UserType; onCl
             {/* User Info */}
             <div className="p-3 sm:p-4 border-b border-border">
                 <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
                         <span className="text-secondary font-semibold text-lg sm:text-xl">
                             {user.fullName.charAt(0).toUpperCase()}
                         </span>
@@ -59,7 +59,7 @@ export default function LearnerSidebar({ user, onClose }: { user: UserType; onCl
                                         : 'text-muted hover:bg-background hover:text-foreground'
                                         }`}
                                 >
-                                    <Icon size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                                    <Icon size={18} className="sm:w-5 sm:h-5 shrink-0" />
                                     <span className="font-medium text-xs sm:text-sm">{link.label}</span>
                                 </Link>
                             </li>

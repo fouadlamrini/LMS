@@ -1,16 +1,5 @@
 import api from '@/lib/axios';
-import { Quiz } from '@/types';
-
-interface QuizAttempt {
-  _id: string;
-  quizId: string;
-  userId: string;
-  score: number;
-  passingScore: number;
-  status: 'in-progress' | 'completed';
-  createdAt: string;
-  updatedAt: string;
-}
+import { QuizAttempt } from '@/types';
 
 export async function startQuizAttempt(quizId: string): Promise<QuizAttempt> {
   const { data } = await api.post<QuizAttempt>(`/quizzes/${quizId}/attempts`);

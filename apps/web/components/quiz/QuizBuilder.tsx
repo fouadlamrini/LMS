@@ -192,7 +192,7 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [hasUnsavedChanges]);
 
-    const handleSafeNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    const handleSafeNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (hasUnsavedChanges()) {
             const confirmExit = window.confirm(
                 "You have unsaved questions. Are you sure you want to leave without saving?"
@@ -215,14 +215,14 @@ export default function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                             <div className="flex items-center gap-2 text-xs text-muted mb-2">
                                 <Link
                                     href={`/trainer/courses/${quiz.moduleId.courseId._id}`}
-                                    onClick={(e) => handleSafeNavigation(e, `/trainer/courses/${quiz.moduleId.courseId._id}`)}
+                                    onClick={(e) => handleSafeNavigation(e)}
                                     className="hover:text-secondary transition-colors">
                                     {quiz.moduleId.courseId.title}
                                 </Link>
                                 <span>/</span>
                                 <Link
                                     href={`/trainer/courses/${quiz.moduleId.courseId._id}/modules/${quiz.moduleId._id}`}
-                                    onClick={(e) => handleSafeNavigation(e, `/trainer/courses/${quiz.moduleId.courseId._id}/modules/${quiz.moduleId._id}`)}
+                                    onClick={(e) => handleSafeNavigation(e)}
                                     className="hover:text-secondary transition-colors">
                                     {quiz.moduleId.title}
                                 </Link>

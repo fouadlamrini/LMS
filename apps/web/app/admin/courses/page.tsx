@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BookOpen, Loader2, Trash2, Eye, X } from 'lucide-react';
+import { BookOpen, Loader2, Trash2, Eye } from 'lucide-react';
 import { getCourses, deleteCourse } from '@/lib/api/courses';
 import type { Course } from '@/types';
 
@@ -51,7 +51,7 @@ export default function AdminCoursesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
+      <div className="flex items-center justify-center min-h-50">
         <Loader2 className="w-8 h-8 animate-spin text-muted" />
       </div>
     );
@@ -73,7 +73,7 @@ export default function AdminCoursesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
         <div className="rounded-lg border border-border bg-surface p-4 sm:p-5 lg:p-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 rounded-lg bg-primary/20 flex-shrink-0">
+            <div className="p-2 sm:p-3 rounded-lg bg-primary/20 shrink-0">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
             <div className="min-w-0">
@@ -84,7 +84,7 @@ export default function AdminCoursesPage() {
         </div>
         <div className="rounded-lg border border-border bg-surface p-4 sm:p-5 lg:p-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 rounded-lg bg-success/20 flex-shrink-0">
+            <div className="p-2 sm:p-3 rounded-lg bg-success/20 shrink-0">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
             </div>
             <div className="min-w-0">
@@ -95,7 +95,7 @@ export default function AdminCoursesPage() {
         </div>
         <div className="rounded-lg border border-border bg-surface p-4 sm:p-5 lg:p-6 sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 rounded-lg bg-muted/30 flex-shrink-0">
+            <div className="p-2 sm:p-3 rounded-lg bg-muted/30 shrink-0">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-muted" />
             </div>
             <div className="min-w-0">
@@ -203,7 +203,7 @@ export default function AdminCoursesPage() {
                         <p className="text-xs sm:text-sm text-muted line-clamp-2 mb-2">{course.description || '—'}</p>
                       </div>
                       <span
-                        className={`inline-block text-xs px-2 py-0.5 rounded flex-shrink-0 ${
+                        className={`inline-block text-xs px-2 py-0.5 rounded shrink-0 ${
                           course.published
                             ? 'bg-success/20 text-success'
                             : 'bg-muted/30 text-muted'

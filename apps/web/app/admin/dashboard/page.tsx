@@ -2,23 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Users, BookOpen, GraduationCap, UserCheck } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import {
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   AreaChart,
   Area,
-  ComposedChart,
   RadialBarChart,
   RadialBar
 } from 'recharts';
@@ -79,7 +73,7 @@ export default function AdminDashboardPage() {
 
       const publishedCourses = courses.filter((c: Course) => c.published).length;
       const activeEnrollments = enrollments.filter((e: any) => e.status === 'active').length;
-      
+
       const learners = users.filter((u: any) => u.role === 'learner').length;
       const trainers = users.filter((u: any) => u.role === 'trainer').length;
       const admins = users.filter((u: any) => u.role === 'admin').length;
@@ -104,7 +98,7 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <Loader2 className="w-8 h-8 animate-spin text-muted" />
       </div>
     );
@@ -203,17 +197,17 @@ export default function AdminDashboardPage() {
           <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Total Enrollments / Active Enrollments</h2>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 lg:gap-12">
             <ResponsiveContainer width="100%" height={250} className="sm:w-[80%]">
-              <RadialBarChart 
-                cx="50%" 
-                cy="50%" 
-                innerRadius="30%" 
-                outerRadius="80%" 
+              <RadialBarChart
+                cx="50%"
+                cy="50%"
+                innerRadius="30%"
+                outerRadius="80%"
                 data={enrollmentsRadialData}
                 startAngle={90}
                 endAngle={-270}
               >
-                <RadialBar 
-                  dataKey="value" 
+                <RadialBar
+                  dataKey="value"
                   cornerRadius={8}
                   fill="#8884d8"
                 >
@@ -233,7 +227,7 @@ export default function AdminDashboardPage() {
                     style={{ backgroundColor: item.fill }}
                   />
                   <div className="flex-1">
-                    <div className="flex items-center justify-between w-full sm:min-w-[180px]">
+                    <div className="flex items-center justify-between w-full sm:min-w-45">
                       <span className="text-sm sm:text-base font-semibold text-foreground">{item.name}</span>
                       <span className="text-lg sm:text-xl font-bold text-foreground">{item.value}</span>
                     </div>
@@ -251,7 +245,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-lg border border-border bg-surface p-4 sm:p-6">
           <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Total Users</h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8">
-            <ResponsiveContainer width="100%" height={200} className="sm:w-[250px] sm:h-[250px]">
+            <ResponsiveContainer width="100%" height={200} className="sm:w-62.5 sm:h-62.5">
               <PieChart>
                 <Pie
                   data={usersPieData}
@@ -289,7 +283,7 @@ export default function AdminDashboardPage() {
                       style={{ backgroundColor: colorMap[item.name] }}
                     />
                     <div className="flex-1">
-                      <div className="flex items-center justify-between w-full sm:min-w-[120px]">
+                      <div className="flex items-center justify-between w-full sm:min-w-30">
                         <span className="text-xs sm:text-sm text-foreground">{item.name}</span>
                         <span className="text-xs sm:text-sm font-semibold text-foreground">{item.value}</span>
                       </div>
@@ -304,26 +298,26 @@ export default function AdminDashboardPage() {
         {/* Total Courses - Area Chart */}
         <div className="rounded-lg border border-border bg-surface p-4 sm:p-6">
           <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Total Courses</h2>
-          <ResponsiveContainer width="100%" height={200} className="sm:h-[250px]">
+          <ResponsiveContainer width="100%" height={200} className="sm:h-62.5">
             <AreaChart data={coursesBarData}>
               <defs>
                 <linearGradient id="colorPublished" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.published} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={COLORS.published} stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor={COLORS.published} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={COLORS.published} stopOpacity={0.1} />
                 </linearGradient>
                 <linearGradient id="colorDraft" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.draft} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={COLORS.draft} stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor={COLORS.draft} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={COLORS.draft} stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
               <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} />
               <YAxis stroke="#9ca3af" fontSize={12} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke={COLORS.published} 
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={COLORS.published}
                 fillOpacity={1}
                 fill="url(#colorPublished)"
                 strokeWidth={2}

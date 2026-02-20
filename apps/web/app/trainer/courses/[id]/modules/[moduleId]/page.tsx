@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Loader2, Trash2, FileText, Video, ExternalLink, X, Edit2 } from 'lucide-react';
 import { getContentUrl } from '@/lib/axios';
@@ -12,7 +12,6 @@ import type { CourseModule, ModuleContent } from '@/types';
 
 export default function ModuleContentPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params.id as string;
   const moduleId = params.moduleId as string;
 
@@ -211,7 +210,7 @@ export default function ModuleContentPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
+      <div className="flex items-center justify-center min-h-50">
         <Loader2 className="w-8 h-8 animate-spin text-muted" />
       </div>
     );
@@ -250,7 +249,7 @@ export default function ModuleContentPage() {
               type="text"
               value={moduleTitle}
               onChange={(e) => setModuleTitle(e.target.value)}
-              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 min-w-50 px-4 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               onClick={handleSaveTitle}
@@ -309,16 +308,16 @@ export default function ModuleContentPage() {
                 <>
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {c.type === 'pdf' ? (
-                      <FileText className="flex-shrink-0 text-muted" size={20} />
+                      <FileText className="shrink-0 text-muted" size={20} />
                     ) : (
-                      <Video className="flex-shrink-0 text-muted" size={20} />
+                      <Video className="shrink-0 text-muted" size={20} />
                     )}
                     <div className="min-w-0">
                       <p className="font-medium text-foreground truncate">{c.title || 'Sans titre'}</p>
                       <p className="text-xs text-muted">{c.type === 'pdf' ? 'PDF' : 'Vidéo'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => setViewingContent(c)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 border border-border rounded-lg hover:bg-surface text-sm"
@@ -712,7 +711,7 @@ export default function ModuleContentPage() {
               {viewingContent.type === 'pdf' ? (
                 <iframe
                   src={getContentUrl(viewingContent.url)}
-                  className="w-full h-full min-h-[500px] rounded border border-border"
+                  className="w-full h-full min-h-125 rounded border border-border"
                   title={viewingContent.title || 'PDF Content'}
                 />
               ) : (
@@ -720,7 +719,7 @@ export default function ModuleContentPage() {
                   {viewingContent.url.includes('youtube.com') || viewingContent.url.includes('youtu.be') ? (
                     <iframe
                       src={viewingContent.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
-                      className="w-full h-full min-h-[500px] rounded border border-border"
+                      className="w-full h-full min-h-125 rounded border border-border"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       title={viewingContent.title || 'Video Content'}
@@ -728,7 +727,7 @@ export default function ModuleContentPage() {
                   ) : viewingContent.url.includes('vimeo.com') ? (
                     <iframe
                       src={`https://player.vimeo.com/video/${viewingContent.url.split('/').pop()}`}
-                      className="w-full h-full min-h-[500px] rounded border border-border"
+                      className="w-full h-full min-h-125 rounded border border-border"
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen
                       title={viewingContent.title || 'Video Content'}

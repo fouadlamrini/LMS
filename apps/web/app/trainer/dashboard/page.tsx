@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, BookOpen, Users, GraduationCap, UserCheck } from 'lucide-react';
+import { Loader2, BookOpen, Users, GraduationCap } from 'lucide-react';
 import { 
   PieChart, 
   Pie, 

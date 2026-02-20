@@ -1,5 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import QuizTaker from '../components/quiz/QuizTaker';
 import * as quizAttemptApi from '@/lib/api/quiz-attempts';

@@ -211,9 +211,9 @@ export default function CourseModulesPage() {
                 } ${isReordering ? 'pointer-events-none' : ''}`}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <GripVertical size={18} className="text-muted cursor-grab active:cursor-grabbing" />
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-sm font-semibold">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-sm font-semibold">
                     {i + 1}
                   </span>
                 </div>
@@ -224,7 +224,7 @@ export default function CourseModulesPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <Link
                   href={`/trainer/courses/${courseId}/modules/${m._id}`}
                   className="inline-flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg hover:bg-surface text-sm"

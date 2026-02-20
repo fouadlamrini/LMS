@@ -68,6 +68,7 @@ export default function QuizTaker({ quiz }: QuizTakerProps) {
             setAttemptId(attempt._id);
             setStarted(true);
         } catch (err) {
+            console.error(err);
             setError('Failed to start quiz');
         } finally {
             setLoading(false);
@@ -262,7 +263,6 @@ export default function QuizTaker({ quiz }: QuizTakerProps) {
                                 {quiz.questions.map((q, idx) => {
                                     const isPast = idx < currentIndex;
                                     const isCurrent = idx === currentIndex;
-                                    const isFuture = idx > currentIndex;
 
                                     return (
                                         <div
