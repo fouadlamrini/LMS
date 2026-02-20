@@ -15,7 +15,7 @@ export default function PublicHeader() {
                     <Link href="/trainer/courses" className="text-sm font-medium text-muted hover:text-foreground transition">
                         Courses
                     </Link>
-                    <Link href="/contact" className="text-sm font-medium text-muted hover:text-foreground transition">
+                    <Link href="/" className="text-sm font-medium text-muted hover:text-foreground transition">
                         Contact
                     </Link>
                 </nav>

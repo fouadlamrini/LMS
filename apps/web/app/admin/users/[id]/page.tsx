@@ -180,7 +180,7 @@ function InfoItem({
         <span className="text-xs sm:text-sm font-semibold text-muted">{label}</span>
       </div>
 
-      <div className="flex justify-between items-center min-h-[48px] px-2">
+      <div className="flex justify-between items-center min-h-12 px-2">
         {isEditing ? (
           <div className="flex flex-col w-full gap-3 animate-in fade-in slide-in-from-top-1">
             {isSelect ? (
@@ -196,7 +196,7 @@ function InfoItem({
               <textarea
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full p-2.5 bg-background border border-primary rounded-lg outline-none text-sm text-foreground min-h-[100px] focus:ring-2 focus:ring-primary/20"
+                className="w-full p-2.5 bg-background border border-primary rounded-lg outline-none text-sm text-foreground min-h-25 focus:ring-2 focus:ring-primary/20"
                 autoFocus
               />
             ) : (
