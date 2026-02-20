@@ -13,10 +13,10 @@ export default function PublicFooter() {
                 </p>
 
                 <div className="flex gap-6">
-                    <Link href="/privacy" className="text-muted hover:text-primary transition-colors text-sm">
+                    <Link href="/" className="text-muted hover:text-primary transition-colors text-sm">
                         Privacy
                     </Link>
-                    <Link href="/terms" className="text-muted hover:text-primary transition-colors text-sm">
+                    <Link href="/" className="text-muted hover:text-primary transition-colors text-sm">
                         Terms
                     </Link>
                     <Link href="https://twitter.com" target="_blank" className="text-muted hover:text-primary transition-colors text-sm">
