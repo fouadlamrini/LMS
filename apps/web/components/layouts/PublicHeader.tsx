@@ -9,13 +9,13 @@ export default function PublicHeader() {
                 </Link>
 
                 <nav className="hidden md:flex gap-8">
-                    <Link href="/about" className="text-sm font-medium text-muted hover:text-foreground transition">
+                    <Link href="/" className="text-sm font-medium text-muted hover:text-foreground transition">
                         About
                     </Link>
-                    <Link href="/courses" className="text-sm font-medium text-muted hover:text-foreground transition">
+                    <Link href="/trainer/courses" className="text-sm font-medium text-muted hover:text-foreground transition">
                         Courses
                     </Link>
-                    <Link href="/contact" className="text-sm font-medium text-muted hover:text-foreground transition">
+                    <Link href="/" className="text-sm font-medium text-muted hover:text-foreground transition">
                         Contact
                     </Link>
                 </nav>
