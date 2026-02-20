@@ -15,7 +15,7 @@ export class CourseSeeder {
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
     @InjectModel(User.name) private userModel: Model<User>,
-  ) { }
+  ) {}
 
   async seed() {
     const courseCount = await this.courseModel.countDocuments();
@@ -65,7 +65,7 @@ export class CourseSeeder {
       ],
     });
 
-    const webQuiz1 = await this.quizModel.create({
+    await this.quizModel.create({
       moduleId: webModule1._id,
       passingScore: 70,
       questions: [
@@ -110,7 +110,7 @@ export class CourseSeeder {
       ],
     });
 
-    const webQuiz2 = await this.quizModel.create({
+    await this.quizModel.create({
       moduleId: webModule2._id,
       passingScore: 75,
       questions: [
@@ -160,7 +160,7 @@ export class CourseSeeder {
       ],
     });
 
-    const dsQuiz1 = await this.quizModel.create({
+    await this.quizModel.create({
       moduleId: dsModule1._id,
       passingScore: 80,
       questions: [
@@ -235,7 +235,7 @@ export class CourseSeeder {
           ],
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     console.log('✅ Courses, modules, and quizzes seeded successfully');

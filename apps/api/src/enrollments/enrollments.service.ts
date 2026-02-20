@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { Enrollment } from './schemas/enrollment.schema';
 import { Course } from '../courses/schemas/course.schema';
@@ -220,9 +219,11 @@ export class EnrollmentsService {
     }
 
     // 3. Calculate overall progress
-    const totalModules = await this.moduleModel.countDocuments({
-      courseId: new Types.ObjectId(courseId),
-    }).exec();
+    const totalModules = await this.moduleModel
+      .countDocuments({
+        courseId: new Types.ObjectId(courseId),
+      })
+      .exec();
 
     if (totalModules > 0) {
       const completedModules = enrollment.moduleProgress.filter(

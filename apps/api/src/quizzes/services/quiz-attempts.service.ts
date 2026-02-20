@@ -35,7 +35,7 @@ export class QuizAttemptsService {
     @InjectModel(CourseModule.name)
     private courseModuleModel: Model<CourseModuleDocument>,
     private readonly quizzesService: QuizzesService,
-  ) { }
+  ) {}
 
   /* ================= START ATTEMPT ================= */
   async startAttempt(quizId: string, learnerId: string) {
@@ -58,8 +58,8 @@ export class QuizAttemptsService {
     });
     await attempt.save();
 
-    let moduleProgress = enrollment.moduleProgress.find((mp) =>
-      mp.moduleId.toString() === quiz.moduleId._id.toString(),
+    const moduleProgress = enrollment.moduleProgress.find(
+      (mp) => mp.moduleId.toString() === quiz.moduleId._id.toString(),
     );
 
     if (!moduleProgress) {
@@ -67,11 +67,11 @@ export class QuizAttemptsService {
       enrollment.moduleProgress.push({
         moduleId: quiz.moduleId,
         completed: false,
-        quizAttemptIds: [attempt._id as Types.ObjectId],
+        quizAttemptIds: [attempt._id],
       });
     } else {
       // If it exists, just add the new attempt ID
-      moduleProgress.quizAttemptIds.push(attempt._id as Types.ObjectId);
+      moduleProgress.quizAttemptIds.push(attempt._id);
     }
 
     await enrollment.save();
@@ -94,12 +94,11 @@ export class QuizAttemptsService {
 
     const courseId = await this.getCourseIdFromQuiz(quiz);
 
-    const enrollment = await this.enrollmentModel
-      .findOne({
-        learnerId: new Types.ObjectId(learnerId),
-        courseId: new Types.ObjectId(courseId),
-        'moduleProgress.quizAttemptIds': new Types.ObjectId(attempt._id), // ensures the learner owns this attempt
-      })
+    const enrollment = await this.enrollmentModel.findOne({
+      learnerId: new Types.ObjectId(learnerId),
+      courseId: new Types.ObjectId(courseId),
+      'moduleProgress.quizAttemptIds': new Types.ObjectId(attempt._id), // ensures the learner owns this attempt
+    });
 
     if (!enrollment)
       throw new ForbiddenException('You do not own this attempt');
@@ -226,7 +225,7 @@ export class QuizAttemptsService {
             answer.textAnswer &&
             question.correctAnswerText &&
             answer.textAnswer.trim().toLowerCase() ===
-            question.correctAnswerText.trim().toLowerCase()
+              question.correctAnswerText.trim().toLowerCase()
           )
             score += question.score;
           break;
@@ -257,7 +256,7 @@ export class QuizAttemptsService {
       enrollment.overallProgress = Math.round(
         (enrollment.moduleProgress.filter((mp) => mp.completed).length /
           enrollment.moduleProgress.length) *
-        100,
+          100,
       );
 
       await enrollment.save();
@@ -277,7 +276,6 @@ export class QuizAttemptsService {
     return module.courseId;
   }
 
-
   async getLearnerAttemptsOnQuiz(learnerId: string, quizId: string) {
     // 1️⃣ Get the quiz
     const quiz = await this.quizzesService.findOne(quizId);
@@ -295,7 +293,7 @@ export class QuizAttemptsService {
 
     // 4️⃣ Find the moduleProgress for this quiz
     const moduleProgress = enrollment.moduleProgress.find(
-      (mp) => mp.moduleId.toString() === quiz.moduleId._id.toString()
+      (mp) => mp.moduleId.toString() === quiz.moduleId._id.toString(),
     );
 
     if (!moduleProgress) return []; // no attempts yet
@@ -323,16 +321,18 @@ export class QuizAttemptsService {
       (sum, question) => sum + (question.score ?? 0),
       0,
     );
-    const results = attempts.map(attempt => ({
+    const results = attempts.map((attempt) => ({
       ...attempt,
       passingScore: quiz.passingScore,
       totalScore,
       moduleTitle: course ? course.title : 'Unknown Module',
-      courseTitle: course && course.courseId ? (course.courseId as any).title : 'Unknown Course',
+      courseTitle:
+        course && course.courseId
+          ? (course.courseId as any).title
+          : 'Unknown Course',
     }));
     return results;
   }
-
 
   // get with one result
   async getWithResult(attemptId: string) {
@@ -353,7 +353,6 @@ export class QuizAttemptsService {
 
     return attempt;
   }
-
 }
 
 /* ================= HELPERS ================= */

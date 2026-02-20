@@ -32,7 +32,7 @@ export class CoursesService {
 
   async findAll(userId?: string, role?: string): Promise<any[]> {
     let courses: any[];
-    
+
     // Learners see only published courses
     if (role === 'learner') {
       courses = await this.courseModel
@@ -58,14 +58,16 @@ export class CoursesService {
     // Count modules for each course
     const coursesWithModuleCount = await Promise.all(
       courses.map(async (course) => {
-        const moduleCount = await this.moduleModel.countDocuments({
-          courseId: new Types.ObjectId(course._id),
-        }).exec();
+        const moduleCount = await this.moduleModel
+          .countDocuments({
+            courseId: new Types.ObjectId(course._id),
+          })
+          .exec();
         return {
           ...course,
           modulesCount: moduleCount,
         };
-      })
+      }),
     );
 
     return coursesWithModuleCount;

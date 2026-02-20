@@ -19,7 +19,7 @@ export class EnrollmentSeeder {
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
-  ) { }
+  ) {}
 
   async seed() {
     const enrollmentCount = await this.enrollmentModel.countDocuments();
@@ -108,7 +108,6 @@ export class EnrollmentSeeder {
           overallProgress: 50,
           status: 'active',
         });
-
       }
     }
 

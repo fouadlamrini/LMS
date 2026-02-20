@@ -18,7 +18,7 @@ export class TrainerService {
     private readonly courseModel: Model<CourseDocument>,
     @InjectModel(Enrollment.name)
     private readonly enrollmentModel: Model<EnrollmentDocument>,
-  ) { }
+  ) {}
 
   async verifyCourseOwnership(courseId: string, trainerId: string) {
     const course = await this.courseModel.findById(courseId);
@@ -33,11 +33,11 @@ export class TrainerService {
   }
 
   async getMyCourses(trainerId: string) {
-    const courses = await this.courseModel.find({ trainerId: new Types.ObjectId(trainerId) });
+    const courses = await this.courseModel.find({
+      trainerId: new Types.ObjectId(trainerId),
+    });
     return courses;
   }
-
-
 
   async getEnrolledLearners(courseId: string, trainerId: string) {
     await this.verifyCourseOwnership(courseId, trainerId);
@@ -47,14 +47,13 @@ export class TrainerService {
     return enrollments;
   }
 
-
   async getLearnerReport(
     trainerId: string,
     courseId: string,
     learnerId: string,
   ) {
     const course = await this.verifyCourseOwnership(courseId, trainerId);
-    console.log("course id:", courseId, "learnerId:", learnerId);
+    console.log('course id:', courseId, 'learnerId:', learnerId);
     const enrollment = await this.enrollmentModel
       .findOne({
         courseId: new Types.ObjectId(courseId),

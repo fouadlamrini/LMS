@@ -56,7 +56,9 @@ describe('QuizzesService', () => {
       expect(quizModel.findOneAndUpdate).toHaveBeenCalledWith(
         { moduleId: expect.any(Types.ObjectId) },
         expect.objectContaining({
-          $setOnInsert: expect.objectContaining({ moduleId: expect.any(Types.ObjectId) }),
+          $setOnInsert: expect.objectContaining({
+            moduleId: expect.any(Types.ObjectId),
+          }),
         }),
         { upsert: true, new: true, setDefaultsOnInsert: true },
       );
@@ -93,10 +95,12 @@ describe('QuizzesService', () => {
       // Mock findOne to return a quiz with total score of 10
       const mockQuizWithScore = {
         ...mockQuiz,
-        questions: [{ score: 10 }]
+        questions: [{ score: 10 }],
       };
 
-      jest.spyOn(service, 'findOne').mockResolvedValue(mockQuizWithScore as any);
+      jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValue(mockQuizWithScore as any);
 
       // Attempt to set passingScore to 15
       const updateDto = { passingScore: 15 };
@@ -111,9 +115,11 @@ describe('QuizzesService', () => {
         ...mockQuiz,
         questions: [{ score: 10 }],
         set: jest.fn().mockReturnThis(),
-        save: jest.fn().mockResolvedValue({ ...mockQuiz, passingScore: 8 })
+        save: jest.fn().mockResolvedValue({ ...mockQuiz, passingScore: 8 }),
       };
-      jest.spyOn(service, 'findOne').mockResolvedValue(mockQuizWithScore as any);
+      jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValue(mockQuizWithScore as any);
 
       const result = await service.update(quizId, { passingScore: 8 });
 
@@ -126,8 +132,9 @@ describe('QuizzesService', () => {
       // Mock findOne to throw NotFoundException
       jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException());
 
-      await expect(service.update(quizId, { passingScore: 5 }))
-        .rejects.toThrow(NotFoundException);
+      await expect(service.update(quizId, { passingScore: 5 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -145,7 +152,7 @@ describe('QuizzesService', () => {
       const result = await service.findByModuleId(moduleId);
 
       expect(quizModel.findOne).toHaveBeenCalledWith({
-        moduleId: expect.any(Types.ObjectId)
+        moduleId: expect.any(Types.ObjectId),
       });
       expect(result).toEqual(mockQuiz);
     });
@@ -226,18 +233,20 @@ describe('QuizzesService', () => {
     it('should correctly calculate module accessibility and completion', async () => {
       // Mock Enrollments
       enrollmentModel.find.mockReturnThis();
-      enrollmentModel.lean.mockResolvedValue([{
-        courseId: courseId,
-        status: 'active',
-        moduleProgress: [{ moduleId: module1Id, completed: true }]
-      }]);
+      enrollmentModel.lean.mockResolvedValue([
+        {
+          courseId: courseId,
+          status: 'active',
+          moduleProgress: [{ moduleId: module1Id, completed: true }],
+        },
+      ]);
 
       // Mock Modules (Two modules in order)
       moduleModel.find.mockReturnThis();
       moduleModel.populate.mockReturnThis();
       moduleModel.lean.mockResolvedValue([
         { _id: module1Id, courseId: courseId, order: 1 },
-        { _id: module2Id, courseId: courseId, order: 2 }
+        { _id: module2Id, courseId: courseId, order: 2 },
       ]);
 
       // Mock Quizzes
@@ -245,7 +254,7 @@ describe('QuizzesService', () => {
       quizModel.populate.mockReturnThis();
       quizModel.lean.mockResolvedValue([
         { moduleId: { _id: module1Id, courseId: { _id: courseId } } },
-        { moduleId: { _id: module2Id, courseId: { _id: courseId } } }
+        { moduleId: { _id: module2Id, courseId: { _id: courseId } } },
       ]);
 
       const result = await service.findQuizzesForLearner(learnerId);
@@ -284,11 +293,16 @@ describe('QuizzesService', () => {
       const mockQuizWithSave = {
         ...mockQuiz,
         status: QuizStatus.DRAFT,
-        save: jest.fn().mockResolvedValue({ ...mockQuiz, status: QuizStatus.PUBLISHED })
+        save: jest
+          .fn()
+          .mockResolvedValue({ ...mockQuiz, status: QuizStatus.PUBLISHED }),
       };
       jest.spyOn(service, 'findOne').mockResolvedValue(mockQuizWithSave as any);
 
-      const result = await service.changeQuizStatus(quizId, QuizStatus.PUBLISHED);
+      const result = await service.changeQuizStatus(
+        quizId,
+        QuizStatus.PUBLISHED,
+      );
 
       expect(mockQuizWithSave.status).toBe(QuizStatus.PUBLISHED);
       expect(mockQuizWithSave.save).toHaveBeenCalled();
@@ -297,21 +311,25 @@ describe('QuizzesService', () => {
 
     it('should throw NotFoundException if quiz is not found', async () => {
       // Mock findOne to throw NotFoundException
-      jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException('Quiz not found'));
+      jest
+        .spyOn(service, 'findOne')
+        .mockRejectedValue(new NotFoundException('Quiz not found'));
 
-      await expect(service.changeQuizStatus(quizId, QuizStatus.PUBLISHED))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        service.changeQuizStatus(quizId, QuizStatus.PUBLISHED),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw an error if the save operation fails', async () => {
       const mockQuizWithSave = {
         ...mockQuiz,
-        save: jest.fn().mockRejectedValue(new Error('Database error'))
+        save: jest.fn().mockRejectedValue(new Error('Database error')),
       };
       jest.spyOn(service, 'findOne').mockResolvedValue(mockQuizWithSave as any);
 
-      await expect(service.changeQuizStatus(quizId, QuizStatus.PUBLISHED))
-        .rejects.toThrow('Database error');
+      await expect(
+        service.changeQuizStatus(quizId, QuizStatus.PUBLISHED),
+      ).rejects.toThrow('Database error');
     });
   });
 });

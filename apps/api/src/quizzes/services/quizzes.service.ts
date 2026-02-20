@@ -18,7 +18,7 @@ export class QuizzesService {
     @InjectModel(Quiz.name) private quizModel: Model<QuizDocument>,
     @InjectModel(Enrollment.name) private enrollmentModel: Model<Enrollment>,
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
-  ) { }
+  ) {}
 
   // helper to calculate score
   private calculateTotalScore(questions: any[]): number {
@@ -34,8 +34,8 @@ export class QuizzesService {
           select: '_id title courseId',
           populate: {
             path: 'courseId',
-            select: '_id title'
-          }
+            select: '_id title',
+          },
         })
         .exec();
       return quiz;
@@ -47,7 +47,7 @@ export class QuizzesService {
 
   async create(createQuizDto: CreateQuizDto) {
     const moduleIdObj = new Types.ObjectId(createQuizDto.moduleId);
-    
+
     try {
       // Use findOneAndUpdate with upsert to ensure atomic operation and prevent duplicates
       const quiz = await this.quizModel
@@ -58,22 +58,22 @@ export class QuizzesService {
               moduleId: moduleIdObj,
               questions: [],
               passingScore: 0,
-              status: QuizStatus.DRAFT
-            }
+              status: QuizStatus.DRAFT,
+            },
           },
           {
             upsert: true,
             new: true,
-            setDefaultsOnInsert: true
-          }
+            setDefaultsOnInsert: true,
+          },
         )
         .populate({
           path: 'moduleId',
           select: '_id title courseId',
           populate: {
             path: 'courseId',
-            select: '_id title'
-          }
+            select: '_id title',
+          },
         })
         .exec();
 
@@ -102,13 +102,12 @@ export class QuizzesService {
         select: '_id title courseId',
         populate: {
           path: 'courseId',
-          select: '_id title'
-        }
-      }
-      ).
-      exec();
+          select: '_id title',
+        },
+      })
+      .exec();
     if (!quiz) throw new NotFoundException(`Quiz with ID ${id} not found`);
-    
+
     return quiz;
   }
 
@@ -116,7 +115,8 @@ export class QuizzesService {
     const quiz = await this.findOne(id);
 
     const totalScore = this.calculateTotalScore(quiz.questions);
-    const requestedPassingScore = updateQuizDto.passingScore ?? quiz.passingScore;
+    const requestedPassingScore =
+      updateQuizDto.passingScore ?? quiz.passingScore;
 
     if (requestedPassingScore > totalScore) {
       throw new BadRequestException(
@@ -161,7 +161,7 @@ export class QuizzesService {
     }
 
     // Get all course IDs
-    const courseIds = enrollments.map(e => e.courseId);
+    const courseIds = enrollments.map((e) => e.courseId);
 
     // Get all modules for these courses
     const modules = await this.moduleModel
@@ -170,7 +170,7 @@ export class QuizzesService {
       .lean();
 
     // Get all quizzes for these modules
-    const moduleIds = modules.map(m => m._id);
+    const moduleIds = modules.map((m) => m._id);
     const quizzes = await this.quizModel
       .find({ moduleId: { $in: moduleIds } })
       .populate({
@@ -178,17 +178,19 @@ export class QuizzesService {
         select: '_id title courseId order',
         populate: {
           path: 'courseId',
-          select: '_id title'
-        }
+          select: '_id title',
+        },
       })
       .lean();
 
     // Map quizzes with module completion status
-    return quizzes.map(quiz => {
+    return quizzes.map((quiz) => {
       const enrollment = enrollments.find(
-        e => e.courseId.toString() === (quiz.moduleId as any).courseId._id.toString()
+        (e) =>
+          e.courseId.toString() ===
+          (quiz.moduleId as any).courseId._id.toString(),
       );
-      
+
       if (!enrollment) {
         return {
           ...quiz,
@@ -197,16 +199,20 @@ export class QuizzesService {
         };
       }
 
-      const courseModules = modules.filter(
-        m => m.courseId.toString() === (quiz.moduleId as any).courseId._id.toString()
-      ).sort((a, b) => (a.order || 0) - (b.order || 0));
+      const courseModules = modules
+        .filter(
+          (m) =>
+            m.courseId.toString() ===
+            (quiz.moduleId as any).courseId._id.toString(),
+        )
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
 
       const moduleIndex = courseModules.findIndex(
-        m => m._id.toString() === quiz.moduleId._id.toString()
+        (m) => m._id.toString() === quiz.moduleId._id.toString(),
       );
 
       const moduleProgress = enrollment.moduleProgress?.find(
-        mp => mp.moduleId.toString() === quiz.moduleId._id.toString()
+        (mp) => mp.moduleId.toString() === quiz.moduleId._id.toString(),
       );
 
       // Module is accessible if:
@@ -218,11 +224,11 @@ export class QuizzesService {
       } else if (moduleIndex > 0) {
         const previousModule = courseModules[moduleIndex - 1];
         const previousProgress = enrollment.moduleProgress?.find(
-          mp => mp.moduleId.toString() === previousModule._id.toString()
+          (mp) => mp.moduleId.toString() === previousModule._id.toString(),
         );
         moduleAccessible = previousProgress?.completed ?? false;
       }
-      
+
       return {
         ...quiz,
         moduleCompleted: moduleProgress?.completed ?? false,

@@ -50,9 +50,7 @@ export class Enrollment {
     default: [],
     validate: {
       validator: (value: ModuleProgress[]) => {
-        const ids = value
-          .map((mp) => mp.moduleId?.toString())
-          .filter(Boolean);
+        const ids = value.map((mp) => mp.moduleId?.toString()).filter(Boolean);
         return ids.length === new Set(ids).size;
       },
       message: 'moduleProgress.moduleId must be unique within an enrollment',

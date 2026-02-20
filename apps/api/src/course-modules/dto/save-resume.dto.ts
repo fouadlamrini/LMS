@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsMongoId, Min } from 'class-validator';
+import { IsNumber, IsMongoId, Min } from 'class-validator';
 
 export class SaveResumeDto {
   @IsMongoId()

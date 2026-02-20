@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Param, Req, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  Get,
+} from '@nestjs/common';
 import { QuizAttemptsService } from '../services/quiz-attempts.service';
 import { AnswerQuestionDto } from '../dto/attempt/answer-question.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
@@ -11,7 +19,7 @@ import { ModuleAccessGuard } from 'src/module-access/module-access.guard';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.LEARNER)
 export class QuizAttemptsController {
-  constructor(private readonly service: QuizAttemptsService) { }
+  constructor(private readonly service: QuizAttemptsService) {}
 
   // Start attempt
   @UseGuards(ModuleAccessGuard)
@@ -41,7 +49,10 @@ export class QuizAttemptsController {
 
   // Get all attempts for a quiz for the current learner
   @Get(':quizId/attempts')
-  async getLearnerAttemptsOnQuiz(@Req() req: any, @Param('quizId') quizId: string) {
+  async getLearnerAttemptsOnQuiz(
+    @Req() req: any,
+    @Param('quizId') quizId: string,
+  ) {
     const learnerId = req.user.userId;
     return this.service.getLearnerAttemptsOnQuiz(learnerId, quizId); // correct order
   }
@@ -51,5 +62,4 @@ export class QuizAttemptsController {
   async getOneAttemptWithResult(@Param('attemptId') attemptId: string) {
     return this.service.getWithResult(attemptId);
   }
-
 }

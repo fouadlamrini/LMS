@@ -26,14 +26,16 @@ async function bootstrap() {
   }
 
   // Enable CORS with credentials
-  const allowedOrigins = ['http://localhost:3000', 'https://lms-web-8i0f.onrender.com'];
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://lms-web-8i0f.onrender.com',
+  ];
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
   });
 
   app.setGlobalPrefix('api');
-
 
   // ENABLE DTO VALIDATION
   app.useGlobalPipes(
@@ -49,7 +51,6 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-
   // get UsersService
   const usersService = app.get(UsersService);
   // seed admin once
@@ -63,4 +64,4 @@ async function bootstrap() {
   console.log('Using env file:', `.env.${process.env.NODE_ENV || 'local'}`);
   console.log(`🚀 API running on http://localhost:${PORT}`);
 }
-bootstrap();
+void bootstrap();

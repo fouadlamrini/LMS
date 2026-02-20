@@ -10,14 +10,7 @@ import {
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './jwt.guard';
-import { Role } from 'src/roles/role.enum';
 
-interface JwtPayload {
-  sub: string;
-  email: string;
-  role: Role;
-  fullName: string;
-}
 @Controller('auth')
 export class AuthController {
   constructor(

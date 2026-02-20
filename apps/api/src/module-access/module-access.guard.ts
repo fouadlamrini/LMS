@@ -15,7 +15,6 @@ import {
   Enrollment,
   EnrollmentDocument,
 } from 'src/enrollments/schemas/enrollment.schema';
-import { QuizzesModule } from 'src/quizzes/quizzes.module';
 import { QuizDocument } from 'src/quizzes/schemas/quiz.schema';
 
 @Injectable()

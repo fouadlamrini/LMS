@@ -4,7 +4,10 @@ import { EnrollmentsService } from './enrollments.service';
 import { EnrollmentsController } from './enrollments.controller';
 import { Enrollment, EnrollmentSchema } from './schemas/enrollment.schema';
 import { Course, CourseSchema } from '../courses/schemas/course.schema';
-import { CourseModule, CourseModuleSchema } from '../course-modules/schemas/course-module.schema';
+import {
+  CourseModule,
+  CourseModuleSchema,
+} from '../course-modules/schemas/course-module.schema';
 
 @Module({
   imports: [

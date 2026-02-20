@@ -15,10 +15,8 @@ import { CoursesService } from '../courses/courses.service';
 import {
   Enrollment,
   EnrollmentDocument,
-  ModuleProgress,
 } from 'src/enrollments/schemas/enrollment.schema';
 import { SaveResumeDto } from './dto/save-resume.dto';
-
 
 @Injectable()
 export class CourseModulesService {
@@ -27,7 +25,7 @@ export class CourseModulesService {
     @InjectModel(Enrollment.name)
     private enrollmentModel: Model<EnrollmentDocument>,
     private coursesService: CoursesService,
-  ) { }
+  ) {}
 
   async create(
     createModuleDto: CreateCourseModuleDto,
@@ -307,7 +305,9 @@ export class CourseModulesService {
     } else if (newType !== content.type) {
       // Type changed but no file provided - keep URL if it's a video URL, otherwise require file
       if (newType === 'pdf' && !file) {
-        throw new BadRequestException('PDF file upload is required when changing to PDF type');
+        throw new BadRequestException(
+          'PDF file upload is required when changing to PDF type',
+        );
       }
       // If changing from PDF to video and no file/URL provided, keep current URL (might be invalid)
     }
@@ -318,7 +318,10 @@ export class CourseModulesService {
         { _id: moduleId, 'contents._id': new Types.ObjectId(contentId) },
         {
           $set: {
-            'contents.$.title': updateContentDto.title !== undefined ? updateContentDto.title : content.title,
+            'contents.$.title':
+              updateContentDto.title !== undefined
+                ? updateContentDto.title
+                : content.title,
             'contents.$.url': newUrl,
             'contents.$.type': newType,
           },
@@ -410,7 +413,11 @@ export class CourseModulesService {
     };
   }
 
-  async saveCourseResume(courseId: string, learnerId: string, dto: SaveResumeDto) {
+  async saveCourseResume(
+    courseId: string,
+    learnerId: string,
+    dto: SaveResumeDto,
+  ) {
     // 1. Validation: Does the enrollment exist?
     const enrollment = await this.enrollmentModel.findOne({
       courseId: new Types.ObjectId(courseId),
@@ -423,35 +430,41 @@ export class CourseModulesService {
     }
 
     // 2. Validation: Does the module and content actually belong to this course?
-    const module = await this.moduleModel.findOne({
-      _id: dto.moduleId,
-      courseId: new Types.ObjectId(courseId),
-    }).lean();
+    const module = await this.moduleModel
+      .findOne({
+        _id: dto.moduleId,
+        courseId: new Types.ObjectId(courseId),
+      })
+      .lean();
 
     if (!module) {
       throw new NotFoundException('Module not found in this course');
     }
 
-    const contentExists = module.contents.some(c => c._id.toString() === dto.contentId);
+    const contentExists = module.contents.some(
+      (c) => c._id.toString() === dto.contentId,
+    );
     if (!contentExists) {
       throw new NotFoundException('Content not found in this module');
     }
 
     // 3. Update the single top-level resume field
-    const updated = await this.enrollmentModel.findOneAndUpdate(
-      { _id: enrollment._id },
-      {
-        $set: {
-          resume: {
-            moduleId: new Types.ObjectId(dto.moduleId), // Storing this is key for your Frontend button
-            contentId: new Types.ObjectId(dto.contentId),
-            position: dto.position,
-            updatedAt: new Date(),
+    const updated = await this.enrollmentModel
+      .findOneAndUpdate(
+        { _id: enrollment._id },
+        {
+          $set: {
+            resume: {
+              moduleId: new Types.ObjectId(dto.moduleId), // Storing this is key for your Frontend button
+              contentId: new Types.ObjectId(dto.contentId),
+              position: dto.position,
+              updatedAt: new Date(),
+            },
           },
         },
-      },
-      { new: true }
-    ).exec();
+        { new: true },
+      )
+      .exec();
 
     return updated;
   }

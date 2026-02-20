@@ -3,18 +3,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuestionDto } from '../dto/question/create-question.dto';
 import { UpdateQuestionDto } from '../dto/question/update-question.dto';
-import { Question, QuizDocument } from '../schemas/quiz.schema';
+import { Question } from '../schemas/quiz.schema';
 import { plainToInstance } from 'class-transformer';
 import { QuestionResponseDto } from '../dto/question/question-response.dto';
 import { QuestionType } from 'src/enums/quiz.enum';
 
 @Injectable()
 export class QuestionsService {
-  constructor(private readonly quizzesService: QuizzesService) { }
+  constructor(private readonly quizzesService: QuizzesService) {}
 
   private validateQuestion(dto: CreateQuestionDto | UpdateQuestionDto) {
     const { type, options, correctAnswerText, correctAnswerBoolean } = dto;
@@ -66,7 +65,7 @@ export class QuestionsService {
         );
       }
 
-      const correctCount = options.filter(o => o.correct).length;
+      const correctCount = options.filter((o) => o.correct).length;
 
       if (type === QuestionType.MULTIPLE_CHOICE && correctCount !== 1) {
         throw new BadRequestException(
@@ -80,7 +79,6 @@ export class QuestionsService {
         );
       }
     }
-
   }
   async addQuestion(quizId: string, dto: CreateQuestionDto) {
     const quiz = await this.quizzesService.findOne(quizId);
@@ -92,7 +90,11 @@ export class QuestionsService {
     return quiz.save();
   }
 
-  async updateQuestion(quizId: string, questionId: string, dto: UpdateQuestionDto) {
+  async updateQuestion(
+    quizId: string,
+    questionId: string,
+    dto: UpdateQuestionDto,
+  ) {
     const quiz = await this.quizzesService.findOne(quizId);
     const question = quiz.questions.id(questionId);
     if (!question) throw new NotFoundException('Question not found');
@@ -102,13 +104,14 @@ export class QuestionsService {
       type: dto.type ?? question.type,
       text: dto.text ?? question.text,
       score: dto.score ?? question.score,
-      options: (dto.options ?? question.options)?.map(o => ({
+      options: (dto.options ?? question.options)?.map((o) => ({
         _id: typeof o._id === 'string' ? o._id : o._id?.toString(),
         text: o.text,
         correct: o.correct,
       })),
       correctAnswerText: dto.correctAnswerText ?? question.correctAnswerText,
-      correctAnswerBoolean: dto.correctAnswerBoolean ?? question.correctAnswerBoolean,
+      correctAnswerBoolean:
+        dto.correctAnswerBoolean ?? question.correctAnswerBoolean,
     };
     this.validateQuestion(merged as CreateQuestionDto | UpdateQuestionDto);
 
@@ -116,18 +119,20 @@ export class QuestionsService {
       const existingOptions = question.options ?? [];
 
       const incomingIds = dto.options
-        .filter(o => o._id)
-        .map(o => o._id!.toString());
+        .filter((o) => o._id)
+        .map((o) => o._id!.toString());
 
       // Remove deleted options
-      question.options = existingOptions.filter(o =>
+      question.options = existingOptions.filter((o) =>
         incomingIds.includes(o._id.toString()),
       );
 
       // Update existing & insert new
-      dto.options.forEach(opt => {
+      dto.options.forEach((opt) => {
         if (opt._id) {
-          const existing = question.options?.find(o => o._id?.toString() === opt._id?.toString());
+          const existing = question.options?.find(
+            (o) => o._id?.toString() === opt._id?.toString(),
+          );
           if (existing) {
             if (opt.text !== undefined) existing.text = opt.text;
             if (opt.correct !== undefined) existing.correct = opt.correct;
@@ -178,11 +183,11 @@ export class QuestionsService {
       score: question.score,
       options:
         question.type === QuestionType.MULTIPLE_CHOICE ||
-          question.type === QuestionType.MULTIPLE_SELECT
+        question.type === QuestionType.MULTIPLE_SELECT
           ? question.options?.map((o) => ({
-            _id: o._id.toString(),
-            text: o.text,
-          }))
+              _id: o._id.toString(),
+              text: o.text,
+            }))
           : undefined,
     };
 
