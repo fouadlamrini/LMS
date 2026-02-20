@@ -15,7 +15,7 @@ export class CourseSeeder {
     @InjectModel(CourseModule.name) private moduleModel: Model<CourseModule>,
     @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
     @InjectModel(User.name) private userModel: Model<User>,
-  ) {}
+  ) { }
 
   async seed() {
     const courseCount = await this.courseModel.countDocuments();
@@ -189,54 +189,54 @@ export class CourseSeeder {
       modules: [],
     });
 
-    const fullTypesQuiz = await this.quizModel.create({
-      moduleId: webModule1._id,
-      passingScore: 20,
-      status: QuizStatus.PUBLISHED,
-      questions: [
-        // 1️⃣ Multiple choice (single correct)
-        {
-          text: 'What does HTML stand for?',
-          type: QuestionType.MULTIPLE_CHOICE,
-          score: 10,
-          options: [
-            { text: 'Hyper Text Markup Language', correct: true },
-            { text: 'High Tech Modern Language', correct: false },
-            { text: 'Home Tool Markup Language', correct: false },
-            { text: 'Hyperlinks and Text Markup Language', correct: false },
+    // fullTypesQuiz
+    await this.quizModel.findOneAndUpdate(
+      { moduleId: webModule1._id },
+      {
+        $set: {
+          moduleId: webModule1._id,
+          passingScore: 20,
+          status: QuizStatus.PUBLISHED,
+          questions: [
+            {
+              text: 'What does HTML stand for?',
+              type: QuestionType.MULTIPLE_CHOICE,
+              score: 10,
+              options: [
+                { text: 'Hyper Text Markup Language', correct: true },
+                { text: 'High Tech Modern Language', correct: false },
+                { text: 'Home Tool Markup Language', correct: false },
+                { text: 'Hyperlinks and Text Markup Language', correct: false },
+              ],
+            },
+            {
+              text: 'Which of the following are JavaScript frameworks?',
+              type: QuestionType.MULTIPLE_SELECT,
+              score: 15,
+              options: [
+                { text: 'React', correct: true },
+                { text: 'Angular', correct: true },
+                { text: 'Laravel', correct: false },
+                { text: 'Vue', correct: true },
+              ],
+            },
+            {
+              text: 'CSS is used for styling web pages.',
+              type: QuestionType.TRUE_FALSE,
+              score: 5,
+              correctAnswerBoolean: true,
+            },
+            {
+              text: 'Write the keyword used to declare a constant in JavaScript.',
+              type: QuestionType.SHORT_ANSWER,
+              score: 10,
+              correctAnswerText: 'const',
+            },
           ],
         },
-
-        // 2️⃣ Multiple select
-        {
-          text: 'Which of the following are JavaScript frameworks?',
-          type: QuestionType.MULTIPLE_SELECT,
-          score: 15,
-          options: [
-            { text: 'React', correct: true },
-            { text: 'Angular', correct: true },
-            { text: 'Laravel', correct: false },
-            { text: 'Vue', correct: true },
-          ],
-        },
-
-        // 3️⃣ True / False
-        {
-          text: 'CSS is used for styling web pages.',
-          type: QuestionType.TRUE_FALSE,
-          score: 5,
-          correctAnswerBoolean: true,
-        },
-
-        // 4️⃣ Short answer
-        {
-          text: 'Write the keyword used to declare a constant in JavaScript.',
-          type: QuestionType.SHORT_ANSWER,
-          score: 10,
-          correctAnswerText: 'const',
-        },
-      ],
-    });
+      },
+      { upsert: true, new: true }
+    );
 
     console.log('✅ Courses, modules, and quizzes seeded successfully');
   }
