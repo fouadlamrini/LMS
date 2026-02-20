@@ -27,7 +27,7 @@ async function bootstrap() {
 
   // Enable CORS with credentials
   app.enableCors({
-    origin: 'http://localhost:3000', // Next.js frontend URL
+    origin: 'https://lms-api-c53f.onrender.com', // Next.js frontend URL
   });
 
   app.setGlobalPrefix('api');
