@@ -1,11 +1,10 @@
-import type { Config } from 'jest';
 import { pathsToModuleNameMapper } from 'ts-jest';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 const { compilerOptions } = require('./tsconfig.json');
 
-const config: Config = {
+const config = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom', // pour React
 
