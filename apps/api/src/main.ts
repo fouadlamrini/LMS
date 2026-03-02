@@ -30,12 +30,17 @@ async function bootstrap() {
     'http://localhost:3000',
     'https://lms-web-8i0f.onrender.com',
     'https://lms-choreka-app.vercel.app',
+    // additional specific domains may be added here
   ];
 
   app.enableCors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like curl/postman)
+      // allow requests with no origin (server-to-server or tools like curl)
       if (!origin) return callback(null, true);
+      // permit any Vercel-hosted deployment of the frontend
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
