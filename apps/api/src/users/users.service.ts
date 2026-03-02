@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import * as nodemailer from 'nodemailer';
 import { User } from './user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -12,40 +11,11 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  private getTransporter() {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      return null;
-    }
-    return nodemailer.createTransport({
-      service: 'gmail', // or your SMTP
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-  }
 
   private generatePassword(): string {
     return crypto.randomBytes(8).toString('hex');
   }
 
-  private async sendWelcomeEmail(
-    email: string,
-    password: string,
-  ): Promise<void> {
-    const transporter = this.getTransporter();
-    if (!transporter) {
-      console.warn('Email configuration not set. Skipping welcome email.');
-      return;
-    }
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Welcome to LMS Platform',
-      text: `Hello,\n\nYour account has been created on the LMS platform.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login here: http://localhost:3000/login\n\nPlease change your password after logging in.\n\nBest regards,\nLMS Team`,
-    };
-    await transporter.sendMail(mailOptions);
-  }
 
   // ================= ADMIN =================
 
@@ -56,13 +26,6 @@ export class UsersService {
     }
     data.password = await bcrypt.hash(password, 10);
     const user = await this.userModel.create(data);
-    // Send email with the plain password (optional - don't fail if email fails)
-    try {
-      await this.sendWelcomeEmail(user.email, password);
-    } catch (error) {
-      // Log error but don't fail user creation if email fails
-      console.error('Failed to send welcome email:', error);
-    }
     return user;
   }
 
