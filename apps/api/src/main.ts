@@ -25,14 +25,27 @@ async function bootstrap() {
     mkdirSync(videosDir, { recursive: true });
   }
 
-  // Enable CORS with credentials
+  // Enable CORS with credentials; allow listed origins and handle preflight
   const allowedOrigins = [
     'http://localhost:3000',
     'https://lms-web-8i0f.onrender.com',
+    'https://lms-choreka-app.vercel.app',
   ];
+
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // allow requests with no origin (like curl/postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error('CORS not allowed by origin')); // will send 403
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   app.setGlobalPrefix('api');
