@@ -1,0 +1,11 @@
+import { Request } from 'express';
+import { Role } from '../roles/role.enum';
+
+export interface RequestWithUser extends Request {
+  user: {
+    userId: string; // _id dyal user as string
+    role: Role;
+    email: string;
+    fullName: string;
+  };
+}
