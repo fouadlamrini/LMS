@@ -15,8 +15,12 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+<<<<<<< HEAD
       // attempt to load environment-specific file first, fall back to plain .env
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
+=======
+      envFilePath: `.env.${process.env.NODE_ENV || 'local'}`, // load correct .env
+>>>>>>> 17d507bf88807e704e8482caf2c6732f44b4cd44
       validate: (env) => {
         if (!env.JWT_SECRET) throw new Error('JWT_SECRET missing');
         if (!env.MONGO_URI) throw new Error('MONGO_URI missing');
