@@ -1,7 +1,6 @@
 import { UsersService } from '../users/users.service';
 import { Role } from '../roles/role.enum';
 
-
 export async function seedAdmin(usersService: UsersService) {
   const adminEmail = 'admin@lms.com';
   const existingAdmin = await usersService.findByEmail(adminEmail);
